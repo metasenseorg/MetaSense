@@ -1,0 +1,172 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:prism="clr-namespace:Prism.Mvvm;assembly=Prism.Forms"
+             prism:ViewModelLocator.AutowireViewModel="True"
+             x:Class="Receiver.Views.DataPage"
+             Title="Data Reader">
+    <ContentPage.Padding>
+        <OnPlatform x:TypeArguments="Thickness">
+            <OnPlatform.iOS>
+                10, 30, 10, 10
+            </OnPlatform.iOS>
+            <OnPlatform.Android>
+                10, 10, 10, 10
+            </OnPlatform.Android>
+            <OnPlatform.WinPhone>
+                10, 10, 10, 10
+            </OnPlatform.WinPhone>
+        </OnPlatform>
+    </ContentPage.Padding>
+    <ScrollView>
+        <StackLayout>
+            <Label Text="{Binding LastMessageReceivedAt, StringFormat='Reading Received at {0:T}'}" HorizontalOptions="EndAndExpand" />
+            <!--<StackLayout HeightRequest="10">
+            </StackLayout>-->
+            <Label Text="Gas Readings Concentrations" HorizontalOptions="CenterAndExpand" Style="{DynamicResource SubtitleStyle}"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <Label Grid.Column="0" Grid.Row="0" Text="AQI" />
+                <Label Grid.Column="1" Grid.Row="0" Text="{Binding AQI, StringFormat='{0:F0}'}" HorizontalOptions="EndAndExpand" />
+                
+                <Label Grid.Column="0" Grid.Row="1" Text="NO2 Concentration" />
+                <Label Grid.Column="1" Grid.Row="1" Text="{Binding NO2ppb, StringFormat='{0:F4} ppb'}" HorizontalOptions="EndAndExpand" />
+
+                <Label Grid.Column="0" Grid.Row="2" Text="Ozone Concentration" />
+                <Label Grid.Column="1" Grid.Row="2" Text="{Binding O3ppb, StringFormat='{0:F4} ppb'}" HorizontalOptions="EndAndExpand" />
+
+                <Label Grid.Column="0" Grid.Row="3" Text="CO Concentration" />
+                <Label Grid.Column="1" Grid.Row="3" Text="{Binding COppm, StringFormat='{0:F4} ppm'}" HorizontalOptions="EndAndExpand" />
+            </Grid>
+            <StackLayout HeightRequest="10">
+            </StackLayout>
+            <Label Text="Gas Readings Raw Data" HorizontalOptions="CenterAndExpand" Style="{DynamicResource SubtitleStyle}"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <Label Grid.Column="0" Grid.Row="0" Text="Value Range" />
+                <Label Grid.Column="1" Grid.Row="0" Text="{Binding Rng, StringFormat='{0:D}'}" HorizontalOptions="EndAndExpand" />
+
+                <Label Grid.Column="0" Grid.Row="1" Text="SN1 Aux" />
+                <Label Grid.Column="1" Grid.Row="1" Text="{Binding S1A, StringFormat='{0:D}'}" HorizontalOptions="EndAndExpand" />
+                <Label Grid.Column="3" Grid.Row="1" Text="SN1 Work" />
+                <Label Grid.Column="4" Grid.Row="1" Text="{Binding S1W, StringFormat='{0:D}'}" HorizontalOptions="EndAndExpand" />
+
+                <Label Grid.Column="0" Grid.Row="2" Text="SN2 Aux" />
+                <Label Grid.Column="1" Grid.Row="2" Text="{Binding S2A, StringFormat='{0:D}'}" HorizontalOptions="EndAndExpand" />
+                <Label Grid.Column="3" Grid.Row="2" Text="SN2 Work" />
+                <Label Grid.Column="4" Grid.Row="2" Text="{Binding S2W, StringFormat='{0:D}'}" HorizontalOptions="EndAndExpand" />
+
+                <Label Grid.Column="0" Grid.Row="3" Text="SN3 Aux" />
+                <Label Grid.Column="1" Grid.Row="3" Text="{Binding S3A, StringFormat='{0:D}'}" HorizontalOptions="EndAndExpand" />
+                <Label Grid.Column="3" Grid.Row="3" Text="SN3 Work" />
+                <Label Grid.Column="4" Grid.Row="3" Text="{Binding S3W, StringFormat='{0:D}'}" HorizontalOptions="EndAndExpand" />
+            </Grid>
+            <StackLayout HeightRequest="10">
+            </StackLayout>
+            <Label Text="Gas Readings Voltages" HorizontalOptions="CenterAndExpand" Style="{DynamicResource SubtitleStyle}"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <Label Grid.Column="0" Grid.Row="0" Text="NO2ppb Aux" />
+                <Label Grid.Column="1" Grid.Row="0" Text="{Binding No2AVolt, StringFormat='{0:F4} Volt'}" HorizontalOptions="EndAndExpand" />
+                <Label Grid.Column="3" Grid.Row="0" Text="NO2ppb Work" />
+                <Label Grid.Column="4" Grid.Row="0" Text="{Binding No2WVolt, StringFormat='{0:F4} Volt'}" HorizontalOptions="EndAndExpand" />
+
+                <Label Grid.Column="0" Grid.Row="1" Text="Ozone Aux" />
+                <Label Grid.Column="1" Grid.Row="1" Text="{Binding OxAVolt, StringFormat='{0:F4} Volt'}" HorizontalOptions="EndAndExpand" />
+                <Label Grid.Column="3" Grid.Row="1" Text="Ozone Work" />
+                <Label Grid.Column="4" Grid.Row="1" Text="{Binding OxWVolt, StringFormat='{0:F4} Volt'}" HorizontalOptions="EndAndExpand" />
+
+                <Label Grid.Column="0" Grid.Row="2" Text="COppm Aux" />
+                <Label Grid.Column="1" Grid.Row="2" Text="{Binding CoAVolt, StringFormat='{0:F4} Volt'}" HorizontalOptions="EndAndExpand" />
+                <Label Grid.Column="3" Grid.Row="2" Text="COppm Work" />
+                <Label Grid.Column="4" Grid.Row="2" Text="{Binding CoWVolt, StringFormat='{0:F4} Volt'}" HorizontalOptions="EndAndExpand" />
+            </Grid>
+            <StackLayout HeightRequest="10">
+            </StackLayout>
+            <Label Text="Environmental Data Readings" HorizontalOptions="CenterAndExpand" Style="{DynamicResource SubtitleStyle}"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <Label Grid.Column="0" Grid.Row="0" Text="Humidity" />
+                <Label Grid.Column="1" Grid.Row="0" Text="{Binding HumPercent, StringFormat='{0:P}'}" HorizontalOptions="EndAndExpand" />
+                <Label Grid.Column="3" Grid.Row="0" Text="Temperature" />
+                <Label Grid.Column="4" Grid.Row="0" Text="{Binding HumCelsius, StringFormat='{0:F2}C'}" HorizontalOptions="EndAndExpand" />
+
+                <Label Grid.Column="0" Grid.Row="1" Text="Pressure" />
+                <Label Grid.Column="1" Grid.Row="1" Text="{Binding PresBar, StringFormat='{0:F2} Bar'}" HorizontalOptions="EndAndExpand" />
+                <Label Grid.Column="3" Grid.Row="1" Text="Temperature" />
+                <Label Grid.Column="4" Grid.Row="1" Text="{Binding PresCelsius, StringFormat='{0:F2}C'}" HorizontalOptions="EndAndExpand" />
+            </Grid>
+            <StackLayout HeightRequest="10">
+            </StackLayout>
+            <Label Text="COppm and VOC Readings" HorizontalOptions="CenterAndExpand" Style="{DynamicResource SubtitleStyle}"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <Label Grid.Column="0" Grid.Row="0" Text="VOC AFE" />
+                <Label Grid.Column="1" Grid.Row="0" Text="{Binding NcVolt, StringFormat='{0:F4} Volt'}" HorizontalOptions="EndAndExpand" />
+                <Label Grid.Column="3" Grid.Row="0" Text="VOC Sensor" />
+                <Label Grid.Column="4" Grid.Row="0" Text="{Binding VOC, StringFormat='{0:F4}'}" HorizontalOptions="EndAndExpand" />
+
+                <Label Grid.Column="0" Grid.Row="1" Text="COppm2" />
+                <Label Grid.Column="1" Grid.Row="1" Text="{Binding CO2, StringFormat='{0:F4}'}" HorizontalOptions="EndAndExpand" />
+            </Grid>
+        </StackLayout>
+        
+        
+    </ScrollView>
+
+
+
+</ContentPage>

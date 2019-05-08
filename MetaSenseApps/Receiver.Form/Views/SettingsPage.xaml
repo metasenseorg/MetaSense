@@ -1,0 +1,178 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<TabbedPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:prism="clr-namespace:Prism.Mvvm;assembly=Prism.Forms"
+             xmlns:viewModels="clr-namespace:Receiver.ViewModels;assembly=Receiver"
+             prism:ViewModelLocator.AutowireViewModel="True"
+             Title="Settings"
+             x:Class="Receiver.Views.SettingsPage">
+    <TabbedPage.Resources>
+        <ResourceDictionary>
+            <viewModels:NotNullToBooleanConverter x:Key="StringToBooleanConverter" />
+        </ResourceDictionary>
+    </TabbedPage.Resources>
+
+    <TabbedPage.Padding>
+        <OnPlatform x:TypeArguments="Thickness">
+            <OnPlatform.iOS>
+                10, 30, 10, 10
+            </OnPlatform.iOS>
+            <OnPlatform.Android>
+                10, 10, 10, 10
+            </OnPlatform.Android>
+            <OnPlatform.WinPhone>
+                10, 10, 10, 10
+            </OnPlatform.WinPhone>
+        </OnPlatform>
+    </TabbedPage.Padding>
+
+    <TabbedPage.Children>
+        <ContentPage Title="General" >
+            <StackLayout>
+                <Label Text="Selected Conversion Function" HorizontalOptions="CenterAndExpand" Style="{DynamicResource SubtitleStyle}"/>
+                <Picker Title="Conversion Function" SelectedItem="{Binding ConversionType}">
+                    <Picker.ItemsSource>
+                        <x:Array Type="{x:Type x:String}">
+                            <x:String>None</x:String>
+                            <x:String>Alphasense</x:String>
+                            <x:String>Sharad</x:String>
+                            <!--DM: add neural network and multi-sensor as available choices-->
+                            <x:String>Neural</x:String>
+                            <x:String>Multisensor</x:String>
+                            <!--DM: end-->
+                        </x:Array>
+                    </Picker.ItemsSource>
+                </Picker>
+                <Label Text="{Binding CurrentConversionAlgorithm, StringFormat='{0} algorithm currently in use.'}" HorizontalOptions="StartAndExpand"/>
+                <Label Text="Validation Failed for Alphasense JSON" IsVisible="{Binding AlphasenseJsonInError, Converter={StaticResource StringToBooleanConverter}}" Style="{DynamicResource SubtitleStyle}"/>
+                <Label Text="{Binding AlphasenseJsonInError}" BackgroundColor="Crimson" TextColor="White" IsVisible="{Binding AlphasenseJsonInError, Converter={StaticResource StringToBooleanConverter}}"/>
+                <Label Text="Validation Failed for Sharad JSON" IsVisible="{Binding SharadJsonInError, Converter={StaticResource StringToBooleanConverter}}" Style="{DynamicResource SubtitleStyle}"/>
+                <Label Text="{Binding SharadJsonInError}" BackgroundColor="Crimson" TextColor="White" IsVisible="{Binding SharadJsonInError, Converter={StaticResource StringToBooleanConverter}}"/>
+                <!--DM: add neural network and multi-sensor error labels-->
+                <Label Text="Validation Failed for Neural Network JSON" IsVisible="{Binding NeuralNetworkJsonInError, Converter={StaticResource StringToBooleanConverter}}" Style="{DynamicResource SubtitleStyle}"/>
+                <Label Text="{Binding NeuralNetworkJsonInError}" BackgroundColor="Crimson" TextColor="White" IsVisible="{Binding NeuralNetworkJsonInError, Converter={StaticResource StringToBooleanConverter}}"/>
+                <Label Text="Validation Failed for Multi-sensor JSON" IsVisible="{Binding MultiSensorJsonInError, Converter={StaticResource StringToBooleanConverter}}" Style="{DynamicResource SubtitleStyle}"/>
+                <Label Text="{Binding MultiSensorJsonInError}" BackgroundColor="Crimson" TextColor="White" IsVisible="{Binding MultiSensorJsonInError, Converter={StaticResource StringToBooleanConverter}}"/>
+                <!--DM: end-->
+
+                <Button 
+                    Text="Save" 
+                    Command="{Binding SaveSettingsButton}"
+                    VerticalOptions="EndAndExpand"
+                    HorizontalOptions="Center"/>
+            </StackLayout>
+        </ContentPage>
+        <ContentPage Title="Alphasense" >
+                <!--<Label Text="Alphasense Calibration Parameters" HorizontalOptions="CenterAndExpand" Style="{DynamicResource SubtitleStyle}"/>-->
+                <StackLayout Orientation="Vertical">
+                    <Label Text="{Binding AlphasenseJsonInError}" BackgroundColor="Crimson" TextColor="White" IsVisible="{Binding AlphasenseJsonInError, Converter={StaticResource StringToBooleanConverter}}"/>
+                    <Label Text="Alphasense Calibration JSON"/>
+                <ScrollView VerticalOptions="FillAndExpand">
+                    <Editor Text="{Binding AlphasenseJson}" VerticalOptions="Fill"/>
+                </ScrollView>
+                    <StackLayout Orientation="Horizontal" VerticalOptions="End">
+                        <Button 
+                            Text="Reset" 
+                            Command="{Binding ResetAlphasenseButton}"
+                            VerticalOptions="End"
+                            HorizontalOptions="Start"/>
+                        <Button 
+                            Text="Verify" 
+                            Command="{Binding VerifyAlphasenseButton}"
+                            VerticalOptions="End"
+                            HorizontalOptions="CenterAndExpand"/>
+                        <Button 
+                            Text="Load" 
+                            Command="{Binding LoadAlphasenseButton}"
+                            VerticalOptions="End"
+                            HorizontalOptions="End"/>
+                </StackLayout>
+            </StackLayout>
+        </ContentPage>
+        <ContentPage Title="Sharad"  >
+            <!--<Label Text="Sharad Calibration Parameters" HorizontalOptions="CenterAndExpand" Style="{DynamicResource SubtitleStyle}"/>-->
+            <StackLayout Orientation="Vertical">
+                <Label Text="{Binding SharadJsonInError}" BackgroundColor="Crimson" TextColor="White" IsVisible="{Binding SharadJsonInError, Converter={StaticResource StringToBooleanConverter}}"/>
+                <Label Text="Sharad Calibration JSON"/>
+                <ScrollView VerticalOptions="FillAndExpand">
+                    <Editor Text="{Binding SharadJson}" VerticalOptions="Fill"/>
+                </ScrollView>
+                <StackLayout Orientation="Horizontal" VerticalOptions="End">
+                    <Button 
+                        Text="Reset" 
+                        Command="{Binding ResetSharadButton}"
+                        VerticalOptions="End"
+                        HorizontalOptions="Start"/>
+                    <Button 
+                        Text="Verify" 
+                        Command="{Binding VerifySharadButton}"
+                        VerticalOptions="End"
+                        HorizontalOptions="CenterAndExpand"/>
+                    <Button 
+                        Text="Load" 
+                        Command="{Binding LoadSharadButton}"
+                        VerticalOptions="End"
+                        HorizontalOptions="End"/>
+                </StackLayout>
+            </StackLayout>
+        </ContentPage>
+        <!--DM: add neural network and multi-sensor options-->
+        <ContentPage Title="Neural Network" >
+            <StackLayout Orientation="Vertical">
+                <Label Text="{Binding NeuralNetworkJsonInError}" BackgroundColor="Crimson" TextColor="White" IsVisible="{Binding NeuralNetworkJsonInError, Converter={StaticResource StringToBooleanConverter}}"/>
+                <Label Text="Neural Network Calibration JSON"/>
+                <!-- leave out json window to prevent long loading time -->
+                <!--<ScrollView VerticalOptions="FillAndExpand">
+                    <Editor Text="{Binding NeuralNetworkJson}" VerticalOptions="Fill"/>
+                </ScrollView>-->
+                <StackLayout Orientation="Horizontal" VerticalOptions="End">
+                    <Button 
+                            Text="Reset" 
+                            Command="{Binding ResetNeuralNetworkButton}"
+                            VerticalOptions="End"
+                            HorizontalOptions="Start"/>
+                    <Button 
+                            Text="Verify" 
+                            Command="{Binding VerifyNeuralNetworkButton}"
+                            VerticalOptions="End"
+                            HorizontalOptions="CenterAndExpand"/>
+                    <Button 
+                            Text="Load" 
+                            Command="{Binding LoadNeuralNetworkButton}"
+                            VerticalOptions="End"
+                            HorizontalOptions="End"/>
+                </StackLayout>
+            </StackLayout>
+        </ContentPage>
+        <ContentPage Title="Multi-sensor" >
+            <StackLayout Orientation="Vertical">
+                <Label Text="{Binding MultiSensorJsonInError}" BackgroundColor="Crimson" TextColor="White" IsVisible="{Binding MultiSensorJsonInError, Converter={StaticResource StringToBooleanConverter}}"/>
+                <Label Text="Multi-sensor Calibration JSON"/>
+                <!-- leave out json window to prevent long loading time -->
+                <!--<ScrollView VerticalOptions="FillAndExpand">
+                    <Editor Text="{Binding NeuralNetworkJson}" VerticalOptions="Fill"/>
+                </ScrollView>-->
+                <StackLayout Orientation="Horizontal" VerticalOptions="End">
+                    <Button 
+                            Text="Reset" 
+                            Command="{Binding ResetMultiSensorButton}"
+                            VerticalOptions="End"
+                            HorizontalOptions="Start"/>
+                    <Button 
+                            Text="Verify" 
+                            Command="{Binding VerifyMultiSensorButton}"
+                            VerticalOptions="End"
+                            HorizontalOptions="CenterAndExpand"/>
+                    <Button 
+                            Text="Load" 
+                            Command="{Binding LoadMultiSensorButton}"
+                            VerticalOptions="End"
+                            HorizontalOptions="End"/>
+                </StackLayout>
+            </StackLayout>
+        </ContentPage>
+        <!--DM: end-->
+    </TabbedPage.Children>
+
+
+</TabbedPage>

@@ -1,0 +1,130 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:prism="clr-namespace:Prism.Mvvm;assembly=Prism.Forms"
+             prism:ViewModelLocator.AutowireViewModel="True"
+             xmlns:chart="clr-namespace:Syncfusion.SfChart.XForms;assembly=Syncfusion.SfChart.XForms"
+             xmlns:viewModels="clr-namespace:ViewModels;assembly=ViewModels"
+             x:Class="Receiver.Views.GraphPage"
+             Title="Data Graph">
+    <!--<ContentPage.BindingContext>
+        <viewModels:GraphViewModel/>
+    </ContentPage.BindingContext>-->
+    <ContentPage.Padding>
+        <OnPlatform x:TypeArguments="Thickness">
+            <OnPlatform.iOS>
+                10, 30, 10, 10
+            </OnPlatform.iOS>
+            <OnPlatform.Android>
+                10, 10, 10, 10
+            </OnPlatform.Android>
+            <OnPlatform.WinPhone>
+                10, 10, 10, 10
+            </OnPlatform.WinPhone>
+        </OnPlatform>
+    </ContentPage.Padding>
+    <StackLayout>
+
+        <chart:SfChart HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand">
+            <chart:SfChart.Title>
+                <chart:ChartTitle Text="Data Analysis"/>
+            </chart:SfChart.Title>
+
+            <chart:SfChart.PrimaryAxis>
+                <chart:DateTimeAxis IntervalType="Hours">
+                    <chart:DateTimeAxis.Title>
+                        <chart:ChartAxisTitle Text="Time"/>
+                    </chart:DateTimeAxis.Title>
+                    <chart:DateTimeAxis.LabelStyle>
+                        <chart:ChartAxisLabelStyle LabelFormat="MM/dd/yy H:mm" />
+                    </chart:DateTimeAxis.LabelStyle>
+                </chart:DateTimeAxis>
+            </chart:SfChart.PrimaryAxis>
+
+            <chart:SfChart.SecondaryAxis>
+                <chart:NumericalAxis>
+                    <chart:NumericalAxis.Title>
+                        <chart:ChartAxisTitle Text="{Binding AxisName}"/>
+                    </chart:NumericalAxis.Title>
+                </chart:NumericalAxis>
+            </chart:SfChart.SecondaryAxis>
+
+            <chart:SfChart.Legend>
+                <chart:ChartLegend DockPosition="Bottom" ToggleSeriesVisibility="True"/>
+            </chart:SfChart.Legend>
+
+
+            <chart:SfChart.Series>
+                <chart:LineSeries Label = "{Binding MeasureName}" ItemsSource = "{Binding GraphValues}"/>
+            </chart:SfChart.Series>
+        </chart:SfChart>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Button Grid.Column="0" Grid.Row="0" 
+                    Text="NO2" 
+                    Command="{Binding SetConcentrationNO2}"
+                    VerticalOptions="Center"
+                    HorizontalOptions="Center"/>
+            <Button Text="Ozone" Grid.Column="1" Grid.Row="0"
+                    Command="{Binding SetConcentrationO3}"
+                    VerticalOptions="Center"
+                    HorizontalOptions="Center"/>
+            <Button Text="CO" Grid.Column="2" Grid.Row="0"
+                    Command="{Binding SetConcentrationCO}"
+                    VerticalOptions="Center"
+                    HorizontalOptions="Center"/>
+            <Label Text="{Binding HoursToShow, StringFormat='{0} hours'}"
+                    VerticalOptions="Center"
+                    Grid.Column="0" Grid.Row="1" />
+            <Slider Value="{Binding HoursToShowScaled}"
+                    Maximum="8"  Minimum="1"
+                    Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="1" />            
+            <!--<Button Grid.Column="0" Grid.Row="0" 
+                    Text="NO2 Work" 
+                    Command="{Binding SetNo2W}"
+                        VerticalOptions="Center"
+                        HorizontalOptions="Center"/>
+            <Button Text="NO2 Aux" Grid.Column="1" Grid.Row="0"
+                    Command="{Binding SetNo2A}"
+                        VerticalOptions="Center"
+                        HorizontalOptions="Center"/>
+            <Button Text="CO Work" Grid.Column="2" Grid.Row="0"
+                    Command="{Binding SetCoW}"
+                        VerticalOptions="Center"
+                        HorizontalOptions="Center"/>
+            <Button Text="CO Aux" Grid.Column="0" Grid.Row="1"
+                    Command="{Binding SetCoA}"
+                        VerticalOptions="Center"
+                        HorizontalOptions="Center"/>
+            <Button Text="OX Work" Grid.Column="1" Grid.Row="1"
+                        Command="{Binding SetOxW}"
+                            VerticalOptions="Center"
+                            HorizontalOptions="Center"/>
+            <Button Text="OX Aux" Grid.Column="2" Grid.Row="1"
+                        Command="{Binding SetOxA}"
+                            VerticalOptions="Center"
+                            HorizontalOptions="Center"/>
+            <Button Text="Temp" Grid.Column="0" Grid.Row="2" 
+                        Command="{Binding SetTemp}"
+                            VerticalOptions="Center"
+                            HorizontalOptions="Center"/>
+            <Button Text="Bar" Grid.Column="1" Grid.Row="2"
+                        Command="{Binding SetBar}"
+                            VerticalOptions="Center"
+                            HorizontalOptions="Center"/>
+            <Button Text="Hum" Grid.Column="2" Grid.Row="2"
+                        Command="{Binding SetHuh}"
+                            VerticalOptions="Center"
+                            HorizontalOptions="Center"/>-->
+        </Grid>
+    </StackLayout>
+</ContentPage>

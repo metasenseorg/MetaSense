@@ -1,0 +1,362 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:prism="clr-namespace:Prism.Mvvm;assembly=Prism.Forms"
+             prism:ViewModelLocator.AutowireViewModel="True"
+             x:Class="Receiver.Views.AQIPage"
+             BackgroundColor="{StaticResource BackgroundColor}"
+             NavigationPage.HasNavigationBar="False">
+
+    <!-- duplicated resources since resources are not loaded before first screen is shown -->
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <Color x:Key="HeaderTextColor">#ffffff</Color>
+            <Color x:Key="StandardTextColor">#b7b7b7</Color>
+            <Color x:Key="BackgroundColor">#000000</Color>
+            <Color x:Key="MetaSenseTheme">#25e85b</Color>
+            <Color x:Key="GoodAQIColor">#00e400</Color>
+            <!--true EPA yellow color-->
+            <!--<Color x:Key="ModerateAQIColor">#ffff00</Color>-->
+            <Color x:Key="ModerateAQIColor">#f0f400</Color>
+            <Color x:Key="SensitiveUnhealthyAQIColor">#ff7e00</Color>
+            <Color x:Key="UnhealthyAQIColor">#ff0000</Color>
+            <Color x:Key="VeryUnhealthyAQIColor">#8f3f97</Color>
+            <Color x:Key="TableRowColor">#e0e0e0</Color>
+            <Color x:Key="AltTableRowColor">#f2f2f2</Color>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <ContentPage.Content>
+        <AbsoluteLayout HorizontalOptions="FillAndExpand" 
+                        VerticalOptions="FillAndExpand"
+                        Padding="0">
+            <Frame Padding="4"
+                       BackgroundColor="{StaticResource StandardTextColor}"
+                       AbsoluteLayout.LayoutBounds="0,0,1,.05"
+                       AbsoluteLayout.LayoutFlags="All">
+                <Label Text="CitiSense"
+                       HorizontalOptions="Fill"
+                       VerticalOptions="Center"
+                       TextColor="White"
+                       Font="Bold, 15" />
+            </Frame>
+
+            <Image BindingContext="{Binding NodeViewModel}"
+                   Source="{Binding BluetoothConnectedImage}"
+                   AbsoluteLayout.LayoutBounds=".08,.055,.1,.1"
+                   AbsoluteLayout.LayoutFlags="All"/>
+            <Label Text="my Instantaneous"
+                   AbsoluteLayout.LayoutBounds=".5,.06,1,.1"
+                   AbsoluteLayout.LayoutFlags="All"
+                   HorizontalOptions="Center"
+                   TextColor="{StaticResource StandardTextColor}"
+                   Font="Bold, 15"
+                   Margin="0" />
+            <Label Text="Air Quality"
+                   AbsoluteLayout.LayoutBounds=".5,.075,1,.1"
+                   AbsoluteLayout.LayoutFlags="All"
+                   HorizontalOptions="Center"
+                   TextColor="{StaticResource HeaderTextColor}"
+                   Font="Bold, 40"
+                   Margin="0" />
+            <BoxView AbsoluteLayout.LayoutBounds=".5,.15,1,2"
+                     AbsoluteLayout.LayoutFlags="WidthProportional,PositionProportional"
+                     HorizontalOptions="Fill"
+                     Color="{StaticResource StandardTextColor}" />
+
+
+            <Image AbsoluteLayout.LayoutBounds=".5,0,.975,.85"
+                   AbsoluteLayout.LayoutFlags="All"
+                   Source="{Binding CloudImage}"/>
+            <Label Text="miAQI"
+                   AbsoluteLayout.LayoutBounds=".5,.325,1,.1"
+                   AbsoluteLayout.LayoutFlags="All"
+                   HorizontalOptions="Center"
+                   TextColor="{StaticResource BackgroundColor}"
+                   Font="Bold, 23"/>
+            <Label Text="{Binding AQIText}"
+                   AbsoluteLayout.LayoutBounds=".5,.635,1,.5"
+                   AbsoluteLayout.LayoutFlags="All"
+                   HorizontalOptions="Fill"
+                   HorizontalTextAlignment="Center"
+                   TextColor="{StaticResource BackgroundColor}"
+                   Font="Bold, 90"/>
+            <Label Text="{Binding AQICategory}"
+                   AbsoluteLayout.LayoutBounds=".5,.5425,1,.1"
+                   AbsoluteLayout.LayoutFlags="All"
+                   HorizontalOptions="Fill"
+                   HorizontalTextAlignment="Center"
+                   TextColor="{StaticResource BackgroundColor}"
+                   Font="Bold, 18" />
+            <Label Text="{Binding ContributorAndLastUpdate}"
+                   AbsoluteLayout.LayoutBounds=".5,.58,1,.1"
+                   AbsoluteLayout.LayoutFlags="All"
+                   HorizontalOptions="Fill"
+                   HorizontalTextAlignment="Center"
+                   TextColor="{StaticResource BackgroundColor}"
+                   Font="Default, 18"/>
+            <Button Text="?"
+                    AbsoluteLayout.LayoutBounds=".85,.63,50,50"
+                    AbsoluteLayout.LayoutFlags="PositionProportional"
+                    BorderRadius="25"
+                    Font="Bold, 20"
+                    TextColor="{StaticResource BackgroundColor}"
+                    BackgroundColor="{StaticResource StandardTextColor}"
+                    Command="{Binding HelpButton}"/>
+            <Label Text="{Binding TimeFromLastUpdate}"
+                   AbsoluteLayout.LayoutBounds=".5,.75,1,.10"
+                   AbsoluteLayout.LayoutFlags="All"
+                   HorizontalOptions="Fill"
+                   HorizontalTextAlignment="Center"
+                   Font="Bold, 15"
+                   TextColor="{StaticResource StandardTextColor}" />
+
+            <Image Source="arrow_down.png"
+                   AbsoluteLayout.LayoutBounds="{Binding ArrowLayoutBounds}"
+                   AbsoluteLayout.LayoutFlags="All"/>
+            <Grid AbsoluteLayout.LayoutBounds=".5,.8,.8,.065"
+                  AbsoluteLayout.LayoutFlags="All"
+                  ColumnSpacing="0"
+                  HorizontalOptions="Center">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <!--good (green) AQI range-->
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+
+                    <!--moderate (yellow) AQI range-->
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+
+                    <!--unhealthy for sensitive groups (orange) AQI range-->
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+
+                    <!--unhealthy (red) AQI range-->
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+
+                    <!--very unhealthy (purple) AQI range-->
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+
+                    <!--continued very unhealthy (purple) AQI range-->
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <BoxView Grid.Row="0"
+                         Grid.Column="0"
+                         BackgroundColor="{StaticResource GoodAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="1"
+                         BackgroundColor="{StaticResource GoodAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="2"
+                         BackgroundColor="{StaticResource GoodAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="3"
+                         BackgroundColor="{StaticResource GoodAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="4"
+                         BackgroundColor="{StaticResource GoodAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="5"
+                         BackgroundColor="{StaticResource GoodAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="6"
+                         BackgroundColor="{StaticResource GoodAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="7"
+                         BackgroundColor="{StaticResource GoodAQIColor}"/>
+
+                <BoxView Grid.Row="0"
+                         Grid.Column="8"
+                         BackgroundColor="{StaticResource ModerateAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="9"
+                         BackgroundColor="{StaticResource ModerateAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="10"
+                         BackgroundColor="{StaticResource ModerateAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="11"
+                         BackgroundColor="{StaticResource ModerateAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="12"
+                         BackgroundColor="{StaticResource ModerateAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="13"
+                         BackgroundColor="{StaticResource ModerateAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="14"
+                         BackgroundColor="{StaticResource ModerateAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="15"
+                         BackgroundColor="{StaticResource ModerateAQIColor}"/>
+
+                <BoxView Grid.Row="0"
+                         Grid.Column="16"
+                         BackgroundColor="{StaticResource SensitiveUnhealthyAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="17"
+                         BackgroundColor="{StaticResource SensitiveUnhealthyAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="18"
+                         BackgroundColor="{StaticResource SensitiveUnhealthyAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="19"
+                         BackgroundColor="{StaticResource SensitiveUnhealthyAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="20"
+                         BackgroundColor="{StaticResource SensitiveUnhealthyAQIColor}"/>
+                <BoxView Grid.Row="0"
+                        Grid.Column="21"
+                        BackgroundColor="{StaticResource SensitiveUnhealthyAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="22"
+                         BackgroundColor="{StaticResource SensitiveUnhealthyAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="23"
+                         BackgroundColor="{StaticResource SensitiveUnhealthyAQIColor}"/>
+
+                <BoxView Grid.Row="0"
+                         Grid.Column="24"
+                         BackgroundColor="{StaticResource UnhealthyAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="25"
+                         BackgroundColor="{StaticResource UnhealthyAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="26"
+                         BackgroundColor="{StaticResource UnhealthyAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="27"
+                         BackgroundColor="{StaticResource UnhealthyAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="28"
+                         BackgroundColor="{StaticResource UnhealthyAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="29"
+                         BackgroundColor="{StaticResource UnhealthyAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="30"
+                         BackgroundColor="{StaticResource UnhealthyAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="31"
+                         BackgroundColor="{StaticResource UnhealthyAQIColor}"/>
+
+                <BoxView Grid.Row="0"
+                         Grid.Column="32"
+                         BackgroundColor="{StaticResource VeryUnhealthyAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="33"
+                         BackgroundColor="{StaticResource VeryUnhealthyAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="34"
+                         BackgroundColor="{StaticResource VeryUnhealthyAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="35"
+                         BackgroundColor="{StaticResource VeryUnhealthyAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="36"
+                         BackgroundColor="{StaticResource VeryUnhealthyAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="37"
+                         BackgroundColor="{StaticResource VeryUnhealthyAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="38"
+                         BackgroundColor="{StaticResource VeryUnhealthyAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="39"
+                         BackgroundColor="{StaticResource VeryUnhealthyAQIColor}"/>
+
+                <BoxView Grid.Row="0"
+                         Grid.Column="40"
+                         BackgroundColor="{StaticResource VeryUnhealthyAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="41"
+                         BackgroundColor="{StaticResource VeryUnhealthyAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="42"
+                         BackgroundColor="{StaticResource VeryUnhealthyAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="43"
+                         BackgroundColor="{StaticResource VeryUnhealthyAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="44"
+                         BackgroundColor="{StaticResource VeryUnhealthyAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="45"
+                         BackgroundColor="{StaticResource VeryUnhealthyAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="46"
+                         BackgroundColor="{StaticResource VeryUnhealthyAQIColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="47"
+                         BackgroundColor="{StaticResource VeryUnhealthyAQIColor}"/>
+            </Grid>
+            <BoxView AbsoluteLayout.LayoutBounds="{Binding AQIMarkerLayoutBounds}"
+                     AbsoluteLayout.LayoutFlags="All"
+                     Color="White"/>
+
+            <!--Attribution for share icons (share.png and share_icon.png):
+                    https://www.graphicsfuel.com/wp-content/uploads/2013/06/flat-social-media-icons.zip-->
+            <Grid AbsoluteLayout.LayoutBounds=".5,.975,.25,.125"
+                  AbsoluteLayout.LayoutFlags="All"
+                  HorizontalOptions="Center">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Image Grid.Row="0"
+                       Grid.Column="0"
+                       Source="share_icon.png"/>
+                <Button Grid.Row="0"
+                        Grid.Column="0"      
+                        BackgroundColor="Transparent"
+                        BorderColor="Transparent"
+                        Opacity="0"
+                        Command="{Binding ShareButton}"/>
+            </Grid>
+        </AbsoluteLayout>
+    </ContentPage.Content>
+</ContentPage>

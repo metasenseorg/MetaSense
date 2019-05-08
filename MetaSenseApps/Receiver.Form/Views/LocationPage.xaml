@@ -1,0 +1,97 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:prism="clr-namespace:Prism.Mvvm;assembly=Prism.Forms"
+             prism:ViewModelLocator.AutowireViewModel="True"
+             xmlns:viewModels="clr-namespace:ViewModels;assembly=ViewModels"
+             xmlns:maps="clr-namespace:Xamarin.Forms.Maps;assembly=Xamarin.Forms.Maps"
+             Title="Location"
+             x:Class="Receiver.Views.LocationPage">
+	<!--<ContentPage.BindingContext>
+        <viewModels:LocationViewModel/>
+    </ContentPage.BindingContext>-->
+    <ContentPage.Padding>
+        <OnPlatform x:TypeArguments="Thickness">
+            <OnPlatform.iOS>
+                10, 30, 10, 10
+            </OnPlatform.iOS>
+            <OnPlatform.Android>
+                10, 10, 10, 10
+            </OnPlatform.Android>
+            <OnPlatform.WinPhone>
+                10, 10, 10, 10
+            </OnPlatform.WinPhone>
+        </OnPlatform>
+    </ContentPage.Padding>
+    <StackLayout>
+        <!--<StackLayout Orientation="Horizontal">
+            <Button Text="Start" Command="{Binding Start}"/>
+            <Button Text="Stop" Command="{Binding Stop}"/>
+            <Button Text="Plot24h" Command="{Binding Plot24H}"/>
+        </StackLayout>-->
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <StackLayout Grid.Column="0" Grid.Row="0" >
+                <StackLayout Orientation="Horizontal">
+                    <Label Text="Latitude"/>
+                    <Label Text="{Binding Latitude}"/>
+                </StackLayout>
+                <StackLayout Orientation="Horizontal">
+                    <Label Text="Longitude"/>
+                    <Label Text="{Binding Longitude}"/>
+                </StackLayout>
+                <StackLayout Orientation="Horizontal">
+                    <Label Text="Altitude"/>
+                    <Label Text="{Binding Altitude}"/>
+                </StackLayout>
+                <StackLayout Orientation="Horizontal">
+                    <Label Text="Speed"/>
+                    <Label Text="{Binding Speed}"/>
+                </StackLayout>
+                <StackLayout Orientation="Horizontal">
+                    <Label Text="Direction"/>
+                    <Label Text="{Binding Direction}"/>
+                </StackLayout>
+            </StackLayout>
+
+            <StackLayout Grid.Column="2" Grid.Row="0" >
+                <StackLayout Orientation="Horizontal">
+                    <Label Text="NO2"/>
+                    <Label HorizontalOptions="EndAndExpand" Text="{Binding NO2ppb, StringFormat='{0:F4} ppb'}"/>
+                </StackLayout>
+                <StackLayout Orientation="Horizontal">
+                    <Label Text="Ozone"/>
+                    <Label HorizontalOptions="EndAndExpand" Text="{Binding O3ppb, StringFormat='{0:F4} ppb'}"/>
+                </StackLayout>
+                <StackLayout Orientation="Horizontal">
+                    <Label Text="CO"/>
+                    <Label HorizontalOptions="EndAndExpand" Text="{Binding COppm, StringFormat='{0:F4} ppm'}"/>
+                </StackLayout>
+                <StackLayout Orientation="Horizontal">
+                    <Label Text="Humidity"/>
+                    <Label HorizontalOptions="EndAndExpand" Text="{Binding HumiditySensorHumidityPercent, StringFormat='{0:F2} %'}"/>
+                </StackLayout>
+                <StackLayout Orientation="Horizontal">
+                    <Label Text="Pressure"/>
+                    <Label HorizontalOptions="EndAndExpand" Text="{Binding BarometricSensorPressureBar, StringFormat='{0:F2} mbar'}"/>
+                </StackLayout>
+                <StackLayout Orientation="Horizontal">
+                    <Label Text="Temperature"/>
+                    <Label HorizontalOptions="EndAndExpand" Text="{Binding  HumiditySensorTemperatureCelsius, StringFormat='{0:F2} C'}"/>
+                </StackLayout>
+            </StackLayout>
+        </Grid>
+
+        <maps:Map WidthRequest="320" HeightRequest="200"
+            x:Name="MyMap"
+            IsShowingUser="true"
+            MapType="Street"
+        />
+    </StackLayout>
+</ContentPage>

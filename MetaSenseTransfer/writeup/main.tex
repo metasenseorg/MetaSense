@@ -1,0 +1,1203 @@
+\documentclass[journal abbreviation, manuscript]{copernicus}
+
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{hyperref, float}
+\usepackage{booktabs}
+\usepackage{pdflscape}
+\usepackage{caption, subcaption}
+\usepackage{graphicx}
+\usepackage{xcolor}
+
+\include{defs}
+
+\title{Evaluating and Improving the Reliability of Gas-Phase Sensor System Calibrations Across New Locations for Ambient Measurements and Personal Exposure Monitoring}
+\date{\today}
+
+
+\Author[1]{Sharad Vikram}{}
+\Author[2]{Ashley Collier-Oxandale}{}
+\Author[1]{Michael Ostertag}{}
+\Author[1]{Massimiliano Menarini}{}
+\Author[1]{Camron Chermak}{}
+\Author[2]{Michael Hannigan}{}
+\Author[1]{William Griswold}{}
+
+\affil[1]{University of California, San Diego}
+\affil[2]{University of Colorado, Boulder}
+
+%% The [] brackets identify the author with the corresponding affiliation. 1, 2, 3, etc. should be inserted.
+
+
+
+\runningtitle{TEXT}
+
+\runningauthor{TEXT}
+
+\correspondence{NAME (EMAIL)}
+
+
+
+\received{}
+\pubdiscuss{} %% only important for two-stage journals
+\revised{}
+\accepted{}
+\published{}
+
+\newcommand\todo[1]{\textcolor{red}{#1}}
+\newcommand{\textus}[1]{$_{\text{#1}}$}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+
+Advances in ambient environmental monitoring technologies are enabling concerned communities and citizens to collect data to better understand their local environment and potential exposures. These mobile, low-cost tools make it possible to collect data with increased temporal and spatial resolution providing data on a large scale with unprecedented levels of detail. This type of data has the potential to empower people to make personal decisions about their exposure and support the development of local strategies for reducing pollution and improving health outcomes.
+
+However, calibration of these low-cost instruments has been a challenge.  Often, a sensor package is calibrated via field calibration. This involves colocating the sensor package with a high-quality reference instrument for an extended period, and then applying machine learning or other model fitting technique such as multiple-linear regression to develop a calibration model for converting raw sensor signals to pollutant concentrations.  Although this method helps to correct for the effects of ambient conditions (e.g., temperature) and cross-sensitivities with non-target pollutants, there is a growing body of evidence that calibration models can overfit to a given location or set of environmental conditions on account of the incidental correlation between pollutant levels and environmental conditions, including diurnal cycles.  As a result, a sensor package trained at a field site may provide less reliable data when moved, or \textit{transferred}, to a different location.  This is a potential concern for applications seeking to perform monitoring away from regulatory monitoring sites, such as personal mobile monitoring or high-resolution monitoring of a neighborhood.  
+
+
+
+%. Calibration models commonly overfit to a particular location 
+
+We performed experiments confirming that transferability is indeed a problem and show that it can be improved by collecting data from multiple regulatory sites and building a calibration model that leverages data from a more diverse dataset. We deployed three sensor packages to each of three sites with reference monitors (nine packages total), and then rotated the sensor packages through the sites over time. Two sites were in San Diego, CA, with a third outside of Bakersfield, CA, offering varying environmental conditions, general air quality composition, and pollutant concentrations.  When compared to prior single-site calibration, the multi-site approach exhibits better model transferability for a range of modeling approaches.  Our experiments also reveal that random forest is especially prone to overfitting, and confirms prior results that transfer is a significant source of both bias and standard error.  Bias dominated in our experiments, suggesting that transferability might be easily increased by detecting and correcting for bias.
+
+Also, given that many monitoring applications involve the deployment of many sensor packages based on the same sensing technology, there is an opportunity to leverage the availability of multiple sensors at multiple sites during calibration.  We contribute a new neural network architecture model termed split-NN that splits the model into two-stages, in which the first stage corrects for sensor-to-sensor variation and the second stage uses the combined data of all the sensors to build a model for a single sensor package.  The split-NN modeling approach outperforms multiple linear regression, traditional 2- and 4-layer neural network, and random forest models.
+
+
+\end{abstract}
+
+\section{Introduction}\label{Introduction}
+
+As the use of low-cost sensor systems for citizen science and community-based research expands, improving the robustness of calibration for low-cost sensors will support these efforts by ensuring more reliable data and enabling a more effective use of the often-limited resources of these groups. These next-generation technologies have the potential to reduce the cost of air quality monitoring instruments by orders of magnitude, enabling the collection of data at higher spatial and temporal resolution, providing new options for both personal exposure monitoring and communities concerned about their air quality. \citep{Snyder2013}.  High resolution data collection is important because air quality can vary on small temporal and spatial scales \citep{Monn1997, Wheeler2008}. This variability can make it difficult to estimate exposure or understand the impact of local sources using data from existing monitoring networks \citep{Wilson2005}, which provide information at a more regional scale. Furthermore, studies have highlighted instances where air quality guidelines have been exceeded on small spatial scales, in so called ‘hot spots’ \citep{Wu2012}. This may be of particular concern for environmental justice communities, where residents are unknowingly exposed to higher concentrations of pollutants due to a lack of proximity to local monitoring stations. One group using low-cost sensors to provide more detailed and locally specific air quality information is the Imperial County Community Air Monitoring Network \citep{English2016}. The goal of this network of particulate monitors is to help inform local action (e.g., keeping kids with asthma inside), or open the door to conversations with regulators \citep{English2016}. In another example, researchers are investigating the potential for wearable monitors to improve personal exposure estimates \citep{Jerrett2017}. 
+
+%While there still exist challenges and limitations, these attributes make low-cost sensing an attractive option for concerned citizens and communities interested in investigating local air quality issues. 
+
+The increasing use of low-cost sensors is driving a growing concern regarding data quality \citep{Clements2017}. Low-cost sensors, particularly those designed to detect gas-phase pollutants, are often cross-sensitive to changing environmental conditions (e.g., temperature, humidity, and barometric pressure) and other pollutant species.  Much work has gone into exploring calibration methods, models, and techniques that incorporate corrections for these cross-sensitives to make accurate measurements in complex ambient environments \citep{Spinelle2014, Spinelle2015, SPINELLE2017706, Cross2017, Sadighi2018, Zimmerman2018}. While the methods of building (or \textit{training}) calibration models differ, these studies have all utilized colocations with high-quality reference instruments in the field, instruments such as Federal Reference Method or Federal Equivalent Method monitors (FRM/FEM) \citep{Spinelle2014, Spinelle2015, SPINELLE2017706, Cross2017, Sadighi2018, Zimmerman2018}. This colocated data allows accurate calibration models to be built for the conditions that the sensors will experience in the field (e.g., diurnal environmental trends and background pollutants). A recurring observation has been that laboratory calibrations, while valuable for characterizing a sensor’s abilities, perform poorly compared to field calibrations likely due to an inability to replicate complex conditions in a chamber \citep{Piedrahita2014, Castell2017}.  
+
+Recently, researchers have begun to explore calibrating sensors in one location and testing them in another, called \textit{transfer}.  Often, a decrease in performance is seen in new locations where conditions are likely to differ from the conditions of calibration.  In one study, researchers testing a field calibration for electrochemical SO\textus{2} sensors from one location in Hawaii and at another location also in Hawaii found a small drop in correlation between the reference and converted sensor data \citep{Hagan2018}. This was attributed to the testing location being a generally less polluted environment \citep{Hagan2018}.  In a study that involved calibration techniques for low-cost metal-oxide O\textus{3} sensors and non-dispersive infrared CO\textus{2} sensors in different environments (e.g., typical urban vs. a rural area impacted by oil and gas activity), researchers found that simpler calibration models (i.e., linear models), although generally lower in accuracy, performed more consistently when faced with significant extrapolations in time or typical pollutant levels and sources\citep{Casey2018testing}. In contrast, more complex models (i.e.,artificial neural networks) only transferred well when there was little extrapolation in time or pollutant sources.  A study utilizing electrochemical CO, NO, NO\textus{2}, and O\textus{3} sensors found that performance varied spatially and temporally according to changing atmospheric composition and meteorological conditions \citep{Castell2017}. This team also found calibration model parameters differed based on where exactly a single sensor node was colocated (i.e., a site on a busy street verses a calm street), supporting the idea that these models are being specialized to the environment where training occurred \citep{Castell2017}.  In a recent study targeting this particular issue with low-cost sensors, electrochemical NO and NO\textus{2} sensors were calibrated at a rural site using multivariate linear regression model, support vector regression models, and a random forest regression model. The performance of these models was then examined at two urban sites (one background urban site and one near-traffic urban site). For both sensor types, random forests were found to be the best-performing models, resulting in mean averages errors between 2–4 ppb and relatively useful information in the new locations \citep{Bigi2018performance}. One important note from the authors is that both sensor signals were included in the models for NO and NO\textus{2} respectively, potentially helping to mitigate cross interference effects \citep{Bigi2018performance}. In another recent study, researchers also compared several different calibration model types, as well as the use of individualized verses generalized models and how model performance is affected when sensors are deployed to a new location \citep{Malings2018Development}.  An individualized model is a model for a sensor based on its own data, whereas a generalized model combines the data from all the sensors of the same type being calibrated. The researchers found that the best-performing and most robust model types varied by sensor type; for example, simpler regression models performed best for electrochemical CO sensors, whereas more complicated models, such as artificial neural networks and random forest models, resulted in the best performance for NO\textus{2}.  Despite the varied results, in terms of the best performing model types, the researchers observed that across the different sensor types tested, generalized models resulted in more consistent performance at new sites than individualized models despite having slightly poorer performance during the initial calibration \citep{Malings2018Development}.  If this observation holds across sensor types and the use in other locations, it could help solve the problem of scaling up sensor networks allowing for much larger deployments. 
+
+The mixed results and varying experimental conditions of these studies highlight the need for a more comprehensive understanding of how and why calibration performance degrades when sensors are moved. A better understanding could inform potential strategies to mitigate these effects.  As recent research has successfully applied advanced machine learning techniques to improve sensor calibration models \citep{Zimmerman2018, DeVito2009, Casey2018Performance}, we believe these techniques could also be leveraged in innovative ways to improve the transferability of calibration models.
+
+This paper contributes an extensive transferability study as well as new techniques for data collection and model construction to improve transferability.  We hypothesize that transferability is a real issue for sensors that exhibit cross-sensitivities.   Based on the hypothesis that the increased errors under transfer are due to overfitting, we propose that training a calibration model on multiple sites will improve transfer.  Finally, based on the hypothesis that more data is generally better in field calibration, we propose that transfer can be further improved with a new modeling method (split-NN) that can use the data from multiple sensor packages to train a single sensor's model.
+
+%...by widening the distribution of the training data
+
+As many previous studies studied colocation with reference measurements in one location and a validation at a second location, we designed a deployment that included triplicates of sensor packages colocated at three different reference monitoring stations and then rotated through the three sites – two  near the city of San Diego, CA and one in a rural area outside of Bakersfield, CA.   This allows for further isolating the variable of a new deployment location. The analysis focuses on data from electrochemical O\textus{3} and NO\textus{2} sensors, although other sensor types were deployed and used in the calibration, analogous to \citep{Bigi2018performance}.  These pollutants are often of interest to individuals and communities given the dangers associated with ozone exposure \citep{Brunekreef2002Air}, and nitrogen dioxide’s role in ozone formation. In studying these pollutants, we are adding to the existing literature by examining the transferability issue in relation to electrochemical O\textus{3} and NO\textus{2} sensors, which are known to exhibit cross-sensitive effects \citep{SPINELLE2015480}.  We compare the transferability of multiple linear regression models, neural networks, and random forest models.  Based on these measurements and comparisons, we contribute the following results:
+
+\begin{itemize}
+\item Our experiments confirm that calibration model error increases when the model is transferred to a new location.  This holds over all the modeling methods we tested.
+\item Much of the error under transfer was bias error.  Given the simple structure of bias error, this suggests that transferability might be easily increased by detecting and correcting for bias.
+\item Although random forest methods perform extremely well when trained and tested at a single site, its advantages are largely lost under transfer.
+\item Training a calibration model on multiple sites improves transferability.
+\item Finally, for applications involving the deployment of many sensor packages based on the same sensing technology, we show it is possible to improve transferability by exploiting the presence of multiple sensors at multiple sites during field calibration.  We contribute a new model training method via a two-stage "split" neural network.  The first stage corrects for deviations in sensor performance (essentially bias) and the second stage combines all the data of all the sensors to build a model for a single sensor package.  This modeling approach outperforms other approaches.
+\end{itemize}
+ 
+%Using this data set, we explore (1) how well different calibration techniques hold up across new environments, (2) what is causing a drop in performance in new locations, (3) and solutions and recommendations for sensor users to ensure the most robust calibration possible. 
+
+\section{Methods}
+
+\subsection{Sampling Sites}\label{SamplingSites}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.75\textwidth]{writeup/img/MSdeployment.png}
+\caption{Map and images of deployment locations. Shafter DMV (red) was located 250 mi away from Donovan (blue) and El Cajon (yellow), which were located in San Diego, CA. (bottom right) Deployment containers configuration for the extended deployment. Each container has active ventilation to keep the internal conditions equivalent to the ambient environment.}
+\label{fig:img-map}
+\end{figure}
+
+For this deployment, we coordinated with three regulatory monitoring sites and rotated sensor packages through each site over the course of approximately six months. Each monitoring site included reference instruments for NO\textus{2} and O\textus{3}, among others. The first site was in El Cajon, CA, in a suburban area east of San Diego, CA near an elementary school and a major highway (El Cajon Site). The second site was directly south 15 miles in the south east corner of San Diego, a more rural area approximately two miles from the border crossing for heavy duty vehicles at Otay Mesa (Donovan Site). The third site was in rural Shafter, CA, 250 miles to the north near Bakersfield.  It is considerably inland compared to the other sites with nearby agriculture as well as oil and gas extraction activities. We expected to see a unique environmental profile (i.e., temperature, humidity, and barometric pressure) at the Shafter site due to being considerably more inland, where weather would be more dominated by the desert ecosystem rather than the ocean ecosystem.  We also expected to see unique emission profiles among the sites.  Donovan was expected to show higher truck emissions due to the presence of heavy duty vehicles, potentially idling for long periods of time, while Shafter was expected to be affected by emissions from its nearby oil and gas activity. We expected the El Cajon site's emissions profile to resemble that of a typical urban/suburban site.  This variety of environmental and emissions profiles would allow us to meaningfully test for transferability, in particular to assess to what degree a calibration model trained on one site would overfit for the other sites.
+
+\subsection{The MetaSense System}
+
+\subsubsection{Hardware Platform}
+
+A low-cost air quality sensing platform was developed to interface with commercially available sensors, initially described in \citet{Chan2017context}. The platform was designed to be mobile, modular, and extensible, enabling end users to configure the platform with sensors suited to their monitoring needs. It interfaces with the Particle Photon or Particle Electron platforms, which contain a 24 MHz ARM Cortex M3 microprocessor and a Wi-Fi or 3G cellular module, respectively. In addition, a Bluetooth Low Energy (BLE) module supports energy efficient communication with smartphones and other hubs with BLE connectivity. The platform can interface with any sensor that communicates using standard communication protocols (i.e. analog, I2C, SPI, UART) and supports an input voltage of 3.3 V or 5.0 V. The platform can communicate results to nearby devices using BLE or directly to the cloud using Wi-Fi or 2G/3G cellular, depending on requirements.  USB is also provided for purposes of debugging, charging, and flashing the firmware.  The firmware can also be flashed or configured over the air. An SD card slot provides the option for storing measurements locally, allowing for completely disconnected and low-power operation.
+
+Our configuration utilized electrochemical sensors for traditional air quality indicators (NO\textus{2}, CO, O\textus{3}), nondispersive infrared sensors for CO\textus{2}, photoionization detectors for volatile organic compounds (VOCs), and a variety of environmental sensors (temperature, humidity, barometric pressure). The electrochemical sensors (NO\textus{2}: Alphasense NO\textus{2}-A43F, O\textus{3}: Alphasense O\textus{3}-A431, and CO: Alphasense CO-A4) are mounted to a companion analog front end (AFE) from Alphasense, which assists with voltage regulation and signal amplification. Each sensing element has two electrodes which give analog outputs for the working electrode (WE) and auxiliary electrodes (AE). The difference in signals is approximately linear with respect to the ambient target gas concentration but have dependencies with temperature, humidity, barometric pressure, and cross-sensitivities with other gases. The electrochemical sensors generate an analog output voltage, which is connected to a pair of analog-to-digital converters (ADCs), specifically the TI ADS1115, and converted into a digital representation of the measured voltage, which is later used as inputs for our machine learning models.
+
+% Electrochemical sensors offer a relatively high level of accuracy at a low current consumption. 
+
+\begin{figure}
+\centering
+\includegraphics[width=0.75\textwidth]{writeup/img/metasense-platform}
+\caption{Labeled MetaSense Air Quality Sensing Platform. (Left) Modular, extensible platform in standard configuration with NO\textus{2}, O\textus{3}, and CO electrochemical sensors. (Right) Additional modules that can be added to the board for additional measurement capabilities.}
+\label{fig:img-label}
+\end{figure}
+
+Modern low-cost electrochemical sensors offer a low cost and low power method to measure pollutants, but currently available sensors are more optimized for industrial applications than air pollution monitoring: the overall sensing range is too wide and the noise levels are too high. For example, the AlphaSense A4 sensors for NO\textus{2}, O\textus{3}, and CO have a measurement range of 20, 20, and 500 ppm, respectively, which is significantly higher than the unhealthy range proposed by the United States Air Quality Index. Unhealthy levels for NO\textus{2} at 1-hour exposure range from 0.36 – 0.65 ppm, O\textus{3} at 1-hour exposure from 0.17 – 0.20 ppm, and CO at 8-hour exposure from 12.5 – 15.4 ppm (Uniform Air Quality Index (AQI) and Daily Reporting, ~\citeyear{AQI2015}). Along with the high range, the noise levels of the sensors make it difficult to distinguish whether air quality is good. Using the analog front end (AFE) offered by Alphasense, the noise levels for NO\textus{2}, O\textus{3}, and CO have standard deviations of 7.5 ppb, 7.5 ppb, and 10 ppb, respectively. These standard deviations are large compared to observed signal levels for NO\textus{2} and O\textus{3} measurements, which ranged between 0 – 35 ppb and 12 – 60 ppb, respectively, during the 6 month testing period.
+
+The ambient environmental sensors accurately measure temperature, humidity, and pressure and are important for correcting the environmentally related offset in electrochemical sensor readings. The TE Connectivity MS5540C is a barometric pressure sensor capable of measuring across a 10 to 1100 mbar range with 0.1 mbar resolution. Across 0 C to 50 C, the sensor is accurate to within 1 mbar and has a typical drift of +/- 1 mbar per year. The Sensiron SHT11 is a relative humidity sensor capable of measuring across the full range of relative humidity (0 to 100\% RH) with a 0.05\% RH resolution. Both sensors come equipped with temperature sensors with $\pm$0.8 C and $\pm$0.4 C accuracy, respectively. The sensors stabilize to environmental changes in under 30 seconds, which is sufficiently fast to accurately capture changes in the local environment.
+
+In order to improve the robustness of the boards to ambient conditions, the electronics were conformally coated with silicone and placed into an enclosure as shown in Figure~\ref{fig:img-enclosure}. The housing prevents direct contact with the sensors by providing ports over the electrochemical sensors and a vent near the ambient environmental sensors. The system relies on passive diffusion of pollutants into the sensors due to the high power cost of active ventilation.  However, as described in Section~\ref{DataCollection}, for this study the housed sensor packages were placed in an actively ventilated container.
+
+%The passive diffusion model is acceptable for the mobile sensor use case, though, because external movement of the sensor will cause a higher exchange rate of air into the enclosure. 
+%WGG: I think it may not be entirely acceptable. :)
+
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.75\textwidth]{writeup/img/MetaSense_enclosure_outline.png}
+\caption{An enclosure was 3D printed for the MetaSense Air Quality Sensing Platform with top-side ports above the electrochemical sensors and a side port next to the ambient environmental sensors.}
+\label{fig:img-enclosure}
+\end{figure}
+
+\subsubsection{Software Infrastructure}
+
+%We developed the software infrastructure for the MetaSense sensing platform to support multiple usage scenarios. The firmware is configured to support four communication media. A board can communicate via Bluetooth Low Energy (BLE) or USB to a control program that can configure the platform and collect real-time data. The USB connection also supports debugging the board, charging the board, and updating the firmware. Depending on the hardware configuration, Photon or Electron, the MetaSense board can connect directly to the cloud via Wi-Fi or 3G cellular, respectively. These mediums enable over-the-air firmware updates. Each sensor is equipped with an SD card, allowing all readings to be stored locally for redundancy and for deployment situations where energy consumption is critical.
+
+We developed two applications for Android smartphones that leverage the BLE connection of the MetaSense platform. The first application, the MetaSense Configurator app, enables users to configure the hardware for particular deployment scenarios, adjusting aspects such as sensing frequency, power gating of specific sensors connected, and the communication networks utilized.  The second application, simply called the MetaSense app, collects data from the sensor via BLE and uploads all readings to a remote database.  Each sensor reading is stamped with time and location information, supporting data analysis for mobile use cases. Moreover, users can read the current air quality information on their device, giving them immediate and personalized insight into their exposure to pollutants.
+
+% For example, CO\textus{2} and VOC sensor readings can be enabled or disabled by the configuration application. In another example, if the MetaSense sensing platform is being used as a mobile sensor tethered to a smartphone over BLE, users can disable Wi-Fi (or Cellular) radios to save power. 
+
+The remote measurements database is supported by the MetaSense cloud application and built on Amazon's AWS cloud.  Not only can the MetaSense app connect to this cloud, but the MetaSense boards can be configured to connect directly to it using Wi-Fi or 3G.  The measurement data can be processed by machine learning algorithms in virtual machines in AWS or the data can be downloaded to be analyzed offline.  The aforementioned over-the-air firmware updates are handled through Particle's cloud, which also allows remotely monitoring, configuring and resetting boards. These direct-to-cloud features are key to supporting a long-term, wide-scale deployment like the one presented in this paper.
+
+\subsection{Data Collection and Preprocessing}
+\label{DataCollection}
+To support a long-term deployment in potentially harsh conditions, the sensors were placed into environmentally robust containers, shown in Figure~\ref{fig:img-map}, bottom right. The container was a dry box, measuring 27.4 x 25.1 x 12.4 cm, that was machined to have two sets of two vents on opposing walls. Louvers were installed with two 5 V, 50 mm square axial fans expelling ambient air from one wall and two louvers allowing air to enter the opposite side. The configuration allowed the robust container to equilibrate with the local environment for accurate measurement.  Each container could hold up to three MetaSense boards with cases and complementary hardware.  Due to the long timeframe of the deployment, a USB charging hub was installed into the container to power the fans, the air quality sensors, and either a BLU Android phone or Wi-Fi cellular hotspot. The phones and hot spots were used to connect the sensors to the cloud; therefore, we could remotely monitor the sensors’ status in real-time and perform preliminary data analysis and storage. Each board also had an SD card to record all measurements locally, increasing the reliability of data storage. 
+
+Each container holding three MetaSense sensor packages was placed at one of three sites for simultaneous data collection across the sites. After a period of time the containers were rotated to a new site such that every package spent a period of time at every site.  We performed three rotations such that every sensor was returned to its original site for the final collection, but we disregarded the data from the initial round 0, except to verify that sensor performance had not changed measurably between the beginning and the end of the deployments. \autoref{tab:board-rotations} lists the dates for each rotation as well as where each sensor system was located for each rotation.  The dates are approximate due to the logistics of gaining access to regulatory field sites and the distances traveled to deploy sensors.  Also of note is that the deployments are not of equal length.  This does not affect the results reported below because we ran all combinations of training and testing sites, and training set sizes were normalized to remove the influence of training set size. The data from the reference monitors was provided by the cooperating air quality districts in the form of minute-averaged O\textus{3} and NO\textus{2} concentrations for the time period that our sensor packages were deployed.
+
+\begin{table}[t]
+\centering
+\caption{Board locations and dates for each round.}
+\begin{tabular}{l|llll}
+                  & \textbf{Round 1} &            \textbf{Round 2} &                   \textbf{Round 3} \\
+         & \textbf{9/26/17 - 10/19/17} & \textbf{10/19/17 - 12/21/17} & \textbf{12/21/17 - 3/5/18} \\ \hline
+\textbf{Board 17} & El Cajon    & Shafter      & Donovan    \\
+\textbf{Board 19} &  El Cajon    & Shafter     & Donovan   \\
+\textbf{Board 21} &  El Cajon    & Shafter     & Donovan  \\ \hline
+\textbf{Board 11} &  Shafter      & Donovan  & El Cajon  \\
+\textbf{Board 12} &  Shafter      & Donovan  & El Cajon  \\
+\textbf{Board 13} &  Shafter      & Donovan  & El Cajon  \\ \hline
+\textbf{Board 15} &  Donovan   & El Cajon   & Shafter    \\
+\textbf{Board 18} &  Donovan   & El Cajon   & Shafter     \\
+\textbf{Board 20} &  Donovan   & El Cajon   & Shafter   
+\end{tabular}
+\label{tab:board-rotations}
+\end{table}
+
+Prior to using the dataset for training the calibration models, we performed a preprocessing step. First, we programmatically filtered out data samples that contained anomalous values that might have occurred due to a temporary sensor board malfunction (e.g., due to condensation).  Specifically, we searched for temperature and voltage spikes that were outside the realm of reasonable values (i.e., temperature values above 60 degrees Celsius or ADC readings above 5 volts) and removed the corresponding measurements.  Each removed sample was visually inspected to ensure data was not being erroneously removed. The remaining data was averaged over a minute window to match the time resolution of the data from the reference monitors.  Although we gathered sensor voltage measurements from both the auxilliary ($AE$) and working electrodes ($WE$) of the electrochemical sensors, we used the difference between the two ($AE - WE$) as the representative voltage for each sensor since the auxilliary voltage is meant to serve as a reference voltage for the working electrode. This treatment is consistent with the methodology of \citet{Zimmerman2018}, and we validated that the performance of the calibration models did not differ between tests with both electrodes and test with the difference as input features. The resulting data set over the three rounds at the three site contains 1,200,000 minute-averaged measurements.
+
+With this data, we were able to verify our claim in Section \ref{SamplingSites} that we would observe varied environmental and pollutant conditions among the sites. Generally higher ozone values were reported at Shafter, whereas generally higher NO\textus{2} values were reported at Donovan.  Higher humidity values were reported at the Donovan and El Cajon sites, as compared to Shafter.  Some of the lowest temperature values were reported at Shafter.  For more information see the distribution plots in Appendix \ref{Distributions}. 
+
+\subsection{Baseline Calibration Methods}\label{sec:calibration-methods}
+Sensor calibration is the process of developing and training models to convert a sensor voltage into a pollutant concentration. We formulate sensor calibration as a regression problem with input features $x$ and $e$ representing signals from the electrochemical sensors (O\textus{3} voltage, NO\textus{2} voltage, CO voltage) and environmental factors (temperature, pressure, humidity), respectively, for a total of 6 features. These features are input to a calibration function $h_\theta(x, e)$ that estimates target values $y$ representing pollutant concentrations (O\textus{3} ppb and NO\textus{2} ppb). 
+
+In our regression problem, we seek a function such that $h_\theta(x, e) \approx y$, which we formulate as an optimization where we minimize error over a training data set $\{x_n, e_n, y_n\}_{n = 1}^N$ according to a loss function $L(h_\theta(x, e), y)$, i.e. 
+\begin{equation}
+\theta^* = \argmin_\theta \frac{1}{N}\sum_{n = 1}^N L(h_\theta(x_n, e_n), y_n)
+\end{equation}
+Models trained in this way assume that at inference time, predictions are made on data sampled from the training distribution. While this assumption holds true when the air quality sensors are trained and tested at the same site, the distribution of pollutants and environmental conditions changes when the sensors are moved to a new location. 
+
+We investigated the performance of three calibration models: multiple linear regression, neural networks (sometimes called deep learning), and random forest.  These methods vary in their ability to accurately model complex behaviors, otherwise known as \textit{capacity}, with linear regression having relatively low capacity and neural nets and random forests having substantial capacity.  The price of high capacity is the potential to overfit the training distribution, which is a failure to generalize beyond the training data. Models that overfit will incur significant error when predicting on out-of-distribution examples. Overfitting can be mitigated with regularization and by reducing the model capacity, but this can only go so far if the testing distribution is substantially different from the train distribution. All of these methods have been previously applied to ambient pollutant estimation by various research groups \citep{Piedrahita2014,Spinelle2015,SPINELLE2017706,Sadighi2018,Zimmerman2018,Casey2018testing} and are generally common predictive modeling methods.  For neural nets, we investigated three variants: two-layer, four-layer, and four-layer with a "split" architecture, which we motivate and describe in the next subsection.
+
+%The MetaSense project is concerned with deploying mobile, portable sensors and thus we wish to train calibration models that can generalize beyond the data obtained via colocation. As previously described, we colocated MetaSense boards with EPA stations across three locations in California (El Cajon, Donovan, Shafter). By training a calibration model on training data restricted to some sites and testing on the other site, we measure how well particular models generalize to different locations.
+
+Our baseline models were trained using the Scikit-Learn Python package, and the model parameters for each baseline model can be seen below:
+\begin{enumerate}
+    \item \textbf{Linear regression:} we assume the functional form $h(x) \triangleq w^T x + b$, and fit the parameters in closed form. We use no regularization or polynomial features.
+    \item \textbf{Two-layer neural network:} we fit a two-hidden layer (200 wide) multilayer perceptron with rectified-linear unit activation functions and a final linear layer. We train this neural network using the Adam optimizer ($\beta_0 = 0.9, \beta_1 = 0.999$) and a learning rate of $10^{-3}$.
+    \item \textbf{Four-layer neural network:} Same as two-layer neural network, but four hidden layers of width 200 instead of two.
+    \item \textbf{Random forest:} We divide our data into five folds and train a random forest of size 100 on each fold, resulting in 500 trees. We aim to reproduce the strategy of \cite{Zimmerman2018} as closely as possible.
+\end{enumerate}
+
+\iffalse
+\begin{align*}
+    \mathrm{MAE}(h(x), y) &= |h(x) - y| \\
+    \mathrm{CvMAE}(h(x), y) &= \frac{1}{\textrm{Average conc. of pollutant}}|h(x) - y| \\
+\end{align*}
+\fi
+
+\subsection{Split Neural Network Method}\label{sec:split-nn}
+Overfitting is a problem for high capacity models with a limited distribution in training data, resulting in poor performance when a model is transferred to new locations and environments. One method to improve model transferability would be to collect more training data that includes the test distribution. However, colocating a sensor at multiple different regulatory field sites in order to capture a sufficiently wide distribution is prohibitive in terms of cost and time.  An alternative solution is to deploy a set of sensors based on the same technology across multiple sites and then pool their data.  However, there can be substantial sensor-to-sensor variance in performance that would amplify prediction errors.  We propose a training architecture that consists of two sets of models: a global calibration model that leverages the data from a set of similar sensors spread across different training environments and sensor-specific calibration models that detect and correct the error between sensors.
+
+In the previous subsection, we associated each board $i$ with a calibration function $h_{\theta_i}(x)$ and fit this calibration function with its colocated data. Now, consider a collection of many air quality sensors. We propose using a calibration function split into two distinct steps: first, pollutant sensor voltages $x$ are input into a sensor-specific model, $s_{\theta_i}(x)$, a function parameterized by $\theta_i$, which outputs a fixed dimensional vector $u$~\citep{Goodfellow-et-al-2016}. This intermediate representation $u$ is concatenated with environmental data $e$, which is then passed into a global calibration model $c_\phi([u | e])$. For a single air quality sensor, our final calibration function is $c_\phi([s_{\theta_i}(x) | e])$.  Figure~\ref{fig:split-nn-deploy} depicts the use of such a model.  Such a model is called a split neural network model (\textit{split-NN}) since neural networks are generally used for both the sensor-specific models and the global calibration models. In our experiments, the sensor-specific model $s_{\theta_i}$ is either a linear regressor or neural network  and $c_\phi$ is a two-layer, 100-wide neural network. 
+
+The purpose of the split-NN model is that $s_{\theta_i}$ corrects for differences in air quality sensor $i$'s performance relative to the other sensors, thus normalizing the values and making the behavior of all the sensors compatible with the global model $c_\phi$.  The performance of the estimates from $c_\phi$ should be superior to those from an individual sensor model because it been trained on the (normalized) data of all the boards as opposed to just a single board.
+
+\begin{figure}
+    \includegraphics[width=0.8\textwidth]{writeup/img/split-model.png}
+    \caption{Architecture of the split-NN model in deployment (testing).  Each air quality sensor has a board-specific model $s_{\theta_i}(x)$ that normalizes a given sensor's output ($x$) to an intermediate representation from all sensors ($u$). The intermediate representation is combined with environmental data ($e$) and input to the global model $c_\phi$.}
+    \label{fig:split-nn-deploy}
+\end{figure}
+
+The split model can be trained efficiently with stochastic gradient descent. Specifically, we first collect $N$ data sets for each board $D_i = \{x^{(i)}, e^{(i)}, y^{(i)}\}_{i = 1}^N$. We ensure each of these data sets is the same size by sampling each with replacement to artificially match the largest data set. We then pool the data sets together into one data set from which we sample mini-batches. While each sensor-specific model $s_{\theta_i}$ is trained only on data collected by its sensor, the regression with the other $s_{\theta_i}$ sensor-specific models is designed to detect and correct its bias, outputting an intermediate representations $u$ that is normalized with the others.  The global calibration model is trained on the normalized data from all air quality sensors.
+
+%\todo{WGG: word choice on the above: optimization, NN loss function contains loss terms from every single board, the optimal performance will happen when they report the same things when they measure the same things} 
+
+Although training this neural network will take longer than training one for a single board, it has several key advantages over conventional calibration techniques. The first is its ability to share information across multiple boards. Suppose Board A is trained on Location 1 and Board B is trained on Location 2. Pooling the data sets and using a shared model enables the global calibration model to predict well in both locations, and the calibration models for both boards will have information about the other locations in them, in theory improving transferability. The second is more efficient utilization of data. By pooling data and training jointly, we effectively multiply our data size by the number of boards.  Alternatively, field deployments can be shortened.
+
+\textbf{Calibrating a New Board without a Full Training.}  Field calibration is traditionally performed by colocating a sensor package with reference monitors and then training to match pollutant concentrations.  But, suppose we already had a fleet of low-cost sensor packages already deployed.  A simpler method not requiring coordination with regulatory agencies would be to colocate it with a calibrated sensor package and train a model to match its predicted pollutant levels. This risks compounding errors across models, however. 
+
+The split-NN model enables calibrating a new sensor package by colocating to match \textit{representation} instead of predictions, as learned representations can often improve generalization in transfer learning problems~\citep{Goodfellow-et-al-2016}.  We propose calibrating sensor package $N+1$ to match the intermediate representation output of a colocated, previously-calibrated sensor package. Specifically, we train model $N + 1$ to minimize $L(u_N, u_{N + 1})$, or the loss between the two packages' intermediary outputs. These intermediate representations are designed to be robust to changes in location so training to match these representation so it is expected that it will result in a robust calibration model. We analyze this potential calibration technique by holding out a board from our data sets and training a split model. We then simulate calibrating the held out board by training a sensor model to match the representations produced by another board it was colocated with. We then use this new sensor model with the global calibration function to produce pollutant values. 
+
+%The split-NN offers a novel method to calibrate new boards. Suppose we have a set of $N$ calibrated boards and are presented with an uncalibrated $N + 1$-th board. The safest way to calibrate this new board would is always to colocate it with a ground-truth sensor and train a model.  This requirement, however, is potentially restrictive and expensive, as it necessitates deploying the sensor by an EPA or other reliable sensor. On the other hand, colocating with another low cost sensor is simple and cheap, but risks compounding the noise and error that already exist.
+
+\section{Results and Discussion}
+
+\subsection{Robustness of Different Calibration Techniques Across New Locations}
+We evaluated a set of four baseline models described in Section~\ref{sec:calibration-methods}: multiple linear regression, two-layer neural network (NN-2), four-layer neural network (NN-4), and random forest (RF). With each of these four models, we performed a suite of identical calibration benchmarks that measure the robustness of models to out-of-distribution data. We split all data sets uniformly at random into training and testing subsets, reserving 20\% of each board's data for testing.  In each benchmark, we progressively widened the training distribution by combining training data from more locations (using subsampling to maintain the training set size), while keeping the testing set data set from one location.  We have four ``levels'' of such benchmarks:
+\begin{itemize}
+    \item \textbf{Level 0:} Train a model on one location and test on the same location.  Several studies, discussed in Section \ref{Introduction}, have previously assessed this configuration \citep{Zimmerman2018,Spinelle2015,SPINELLE2017706,Cross2017}.
+    \item \textbf{Level 1:} Train a model on one location and test on another location.  Some recent studies, also discussed in Section \ref{Introduction}, have previously studied this configuration \citep{Hagan2018, Casey2018testing, Bigi2018performance, Malings2018Development}.
+    \item \textbf{Level 2:} Train a model on two locations and test on a third location.
+    \item \textbf{Level 3:} Train a model on three locations and test on one of the three locations.
+\end{itemize}
+\begin{figure}
+\begin{subfigure}{0.23\textwidth}
+\includegraphics[width=\textwidth]{writeup/img/level0.png}
+\caption{Level 0}
+\end{subfigure}
+~
+\begin{subfigure}{0.23\textwidth}
+\includegraphics[width=\textwidth]{writeup/img/level1.png}
+\caption{Level 1}
+\end{subfigure}
+~
+\begin{subfigure}{0.23\textwidth}
+\includegraphics[width=\textwidth]{writeup/img/level2.png}
+\caption{Level 2}
+\end{subfigure}
+~
+\begin{subfigure}{0.23\textwidth}
+\includegraphics[width=\textwidth]{writeup/img/level3.png}
+\caption{Level 3}
+\end{subfigure}
+\caption{Graphical depiction of training versus testing for the Level 0 through Level 3 benchmarks.  The Level 0 and 3 benchmarks test on a training site using held out data.  The Level 1 and 2 benchmarks train and test on different sites, also using held out data for consistency.}
+\end{figure}
+
+In the Level 0 and Level 3 benchmarks, the training and testing data distributions have explicit overlap, whereas in Level 1 and 2, there is no explicit overlap. We expect performance on Level 0 to be the best, as the training and testing distributions are identical.  We expect performance on Level 3 to be similar, due to the overlap in training and testing distributions. We expect performance on Level 1 to be the worst, as the training distribution is the narrowest and with no explicit overlap, whereas we expect performance on Level 2 to be between Level 1 and Level 3, for although there is no explicit overlap, the overall training distribution will be wider, forcing the models to be more general and possibly affording more implicit overlap.  Furthermore, we expect higher capacity models to overfit more to the training data set, and as a result, have the largest gap between Level 0 and Level 1. Thus, we expect linear regression to have more consistent performance across the benchmarks, albeit at relatively high error, followed by the 2-layer neural network, 4-layer neural network, and finally the random forest.
+
+We ran each benchmark across all possible permutations of location and sensor package, measuring six metrics: root mean squared error (rMSE), centered root mean squared error (crMSE), mean absolute error (MAE), the coefficient of variation of mean absolute error (CvMAE), mean bias error (MBE), and coefficient of determination ($\textrm{R}^2$). The results for MAE of the baseline models are plotted in Figure~\ref{fig:results-linear}.  Details can be explored further in Appendix~\ref{sec:simpleresults}.
+
+\begin{figure}[t]
+\centering
+\begin{subfigure}{0.45\textwidth}
+\includegraphics[width=\textwidth]{\baselinedir/NO2" "MAE_test.png}
+\caption{NO\textus{2}}
+\end{subfigure}
+\begin{subfigure}{0.45\textwidth}
+\includegraphics[width=\textwidth]{\baselinedir/O3" "MAE_test.png}
+\caption{O\textus{3}}
+\end{subfigure}
+\caption{Mean absolute error (MAE) boxplots for NO\textus{2} and O\textus{3}, for the Level 0 through Level 3 benchmarks.}
+\label{fig:results-linear}
+\end{figure}
+
+We observe that on average, as model capacity increases, Level 0 error decreases. This is consistent across both NO\textus{2} and O\textus{3} prediction and reflects the ability of the model to fit the training distribution. Concerning model transferability, we find that consistently, \emph{all models suffer significant error when tested on different locations}. Level 1 and 2 benchmarks reflect the ability of a model to generalize to a distribution it hasn't seen before and we see that in these benchmarks, errors are much higher and the gaps between models are much smaller. Furthermore, Level 2 error is slightly lower on average than Level 1 error. By adding data from another site, effectively widening the training distribution, the models are slightly more robust to the unseen testing distribution. Level 3 performance aligns closely with Level 0 performance, which is to be expected, since in both cases the training distribution contains the testing distribution.
+
+Across baselines, we observe that on average, linear regression has the highest error on all the benchmarks. However, its errors across the Level benchmarks are more consistent than the other models, suggesting that low-capacity linear regression is more robust to transfer. On the other hand, random forests have on average the lowest error, but have the most inconsistent results across the Levels. The results indicate a tradeoff between model capacity and robustness to transfer, consistent with our intuitions about model overfitting and generalization. Neural networks lie in between linear regression and random forests, and offer a tradeoff between low error and consistent error. 
+
+\iffalse
+
+\begin{itemize}
+    \item  \emph{Current techniques assume that the conditions of sensor use match those of calibration.  How reasonable are these assumptions in practice?}
+    \begin{itemize}
+        \item Summarize the results of training on one location and testing on the others, compare the results across MLR, NN, and RF 
+        \item Discuss the implications of these results, what does it mean for groups that are calibrating sensors in one location in a city and then moving them to new locations? Or groups calibrating in one city and deploying in another city? Is the drop in performance worse for moving sensors to a new city versus a new location in the same city (this could be valuable information for other researchers and regulatory agencies) Also, out of the quantification techniques tested (MLR, NN, RF) which would be recommended for different situations?
+    \end{itemize}
+    \item When they fail, what are the underlying causes of those failures?  (E.g., variance in humidity, temperature, barometric pressure, or background pollutants.)
+    \begin{itemize}
+        \item When we have a drop in performance is there still any valuable information in the data (i.e., are the trends still there, is it simply a shift causing the poorer performance?) -> a time series of training data from one San Diego site and that same model tested at the other San Diego site and the Shafter site could help us figure this out. (plot model tested on other site)
+        \item Can these drops in performance be attributed to mainly a change in environmental and pollutant distributions between sites OR do different overall/background compositions at sites (based on environmental differences, different sources near and far, etc.) play a large role.
+        \item different data distribution
+        \item overfitting to environment experiments
+        \item include data about RF leaves
+    \end{itemize}
+\end{itemize}
+\fi
+
+
+\begin{figure}[t]
+\centering
+\begin{subfigure}{0.33\textwidth}
+\includegraphics[width=\textwidth]{\baselinedir/NO2_level0_test_target.png}
+\caption{Level 0 (NO\textus{2})}
+\end{subfigure}
+\begin{subfigure}{0.33\textwidth}
+\includegraphics[width=\textwidth]{\baselinedir/NO2_level1_test_target.png}
+\caption{Level 1 (NO\textus{2})}
+\end{subfigure}
+\begin{subfigure}{0.33\textwidth}
+\includegraphics[width=\textwidth]{\baselinedir/NO2_level2_test_target.png}
+\caption{Level 2 (NO\textus{2})}
+\end{subfigure}
+\begin{subfigure}{0.33\textwidth}
+\includegraphics[width=\textwidth]{\baselinedir/O3_level0_test_target.png}
+\caption{Level 0 (O\textus{3})}
+\end{subfigure}
+\begin{subfigure}{0.33\textwidth}
+\includegraphics[width=\textwidth]{\baselinedir/O3_level1_test_target.png}
+\caption{Level 1 (O\textus{3})}
+\end{subfigure}
+\begin{subfigure}{0.33\textwidth}
+\includegraphics[width=\textwidth]{\baselinedir/O3_level2_test_target.png}
+\caption{Level 2 (O\textus{3})}
+\end{subfigure}
+\caption{Target plots for Level 0 through Level 2 for both NO\textus{2} and O\textus{3}.}
+\label{fig:target-plots-levels}
+\end{figure}
+
+To better understand how model performance degrades, we produced target plots, which visualize the tradeoff between centered error and bias  error (Figure~\ref{fig:target-plots-levels}).  The target plots indicate that while error approximately doubles when there is no explicit overlap in the distribution, model bias is many times larger. The increase in bias is more pronounced in the higher capacity models. Furthermore, despite the higher capacity models showing better error and bias in a Level 0 benchmark, the models have very similar error-bias tradeoffs in a Level 1 benchmark, indicating that even a high-capacity model cannot avoid this performance degradation.  Finally, in comparing the Level 1 and Level 2 plots, we observe that adding an additional (no-overlapping) site primarily reduces bias.  The Level 3 plots were very similar to the Level 0 plots and were excluded from Figure~\ref{fig:target-plots-levels} for brevity.
+
+In general, however, we observe that model performance degrades non-trivially
+when moved to different locations. This decrease in performance could result in overconfidence in a sensor's readings, potentially affecting downstream decisions. We briefly analyze the properties of our data that could result in overfitting by first investigating how data distributions across sites and times differ. Over each location and round, pollutant values can be highly variable. This is reflected, for example, in \autoref{fig:no2-rounds} where Shafter has higher values of NO\textus{2} in Round 1 and 2 but lower in Round 3. Furthermore, in \autoref{fig:o3-rounds}, the distribution of O\textus{3} changes remarkably across round and location. Similarly, temperature and humidity change significantly across location and round, which can be seen in \autoref{fig:temperature-rounds} and \autoref{fig:humidity-rounds}.
+
+%\todo{(in the above, perhaps add something like: the model is overfitting to ambient environmental conditions and not the sensor reading. Many pollutants change with the diurnal cycle of the earth (eg. NO\textus{2} turning into O\textus{3} only when there is UV light, so NO\textus{2} is bigger at night, which is typically cooler and more/less humidity).)}.
+
+A question that remains is to what degree overfitting or unique (non-overlapping) distributions of environmental data at the sites is contributing to the failure of the high capacity models to transfer well.  In an effort to better understand what may be driving the drop in performance of the high capacity models when boards are moved, we examined error density plots for temperature and humidity for the Level 1 benchmarks. In these types of plots, one of the predictors, such as temperature or humidity, is plotted against the error for all three sites in a single plot.  Figure~\ref{fig:error-density} displays the error density plots for absolute humidity against the error for the O\textus{3} estimation, for both the linear regression and random forest models (See the remaining plots in Appendix~\ref{sec:remaining-error-density-plots}). These plots illustrate how the magnitude of error varies with respect to higher or lower predictor values as well as how different pairs of training and testing sites compare. There are a couple of things we can derive from this collection of plots.  First, we observe that the pollutant concentrations at the Shafter site are difficult to predict, except for random forest when trained at Shafter itself (Figure~\ref{fig:error-density}f). The Shafter site was spatially far from the other sites and likely had a unique composition of background pollutants and ambient environmental conditions.  Second, we observe that when training a random forest model at one site and testing it at a different site (Figure \ref{fig:error-density}, bottom row), the error density plots look similar to the results from the linear regression models (Figure \ref{fig:error-density}, top row) despite the higher capacity of random forest models.  We observe that the greater errors at the Shafter site are occurring at humidity values that were seen in the training data set (more centrally in the plot), as is evident by their representation in the Donovan data. This implies that these errors did not occur at humidity values that have been extrapolated beyond the original training data set, but rather from overfitting at values in the distribution.  This leads us to conclude that overfitting is the reason random forest's net performance in transfer is not much better than linear regression.
+
+%For example, in Figures~\ref{fig:error-density}a-c show all combinations of train and test for linear regression.  We note the overall similarity of these three combinations.  The one anomaly that we observe is that the model trained at the Donovan site performs particularly poorly at the Shafter site.  
+
+%training occurs at the Donovan site and the error density pattern seen at the testing site in nearby El Cajon, is fairly comparable.  However, at the second testing site, Shafter, the error is greater. Furthermore, the greater error at the Shafter site is occurring at humidity values that were seen in the training data set (more centrally in the plot), as is evident by their representation in the Donovan data. In other words, these are not humidity values that have been extrapolated beyond the original training data set. The same pattern holds true for temperature (See Appendix~\ref{fig:remaining-error-density-plots} for details): there are greater errors occurring at Shafter as opposed to El Cajon and at least a portion of these errors are not occurring at temperature values that were unseen during training. Thus, if the poorer performance by the linear model in Shafter is not attributable to environmental conditions that the model was simply not trained for, then there must be another factor driving this poor performance. Given the differences in source types around the El Cajon versus the Shafter site, we expect the Shafter site to be more different from Donovan than El Cajon, and one potential driver of the poor model performance is the differing levels and compositions of background pollutants.  Given the consistency of this behavior across the plots, it supports the hypothesis that the background composition of pollutants impact low-cost sensors and play a role in model performance (in addition to the well-established impacts from environmental conditions).  Figure~\ref{fig:error-density}b supports these conclusions as again we see fairly comparable error between the two San Diego sites and higher error at the Shafter site at humidity values represented in the training data set.  However, in this plot we can also see that the error at the Donovan site is higher at high and low humidity and temperature values not represented in the original training data set, or where extrapolation is occurring.  This is a limitation we would expect, mainly that pollutant estimations are less trustworthy when the model is required to extrapolate beyond the original training values. Finally, Figure~\ref{fig:error-density}c illustrates how training at the Shafter site results in enhanced and comparable error at both San Diego sites, again supporting the previous observations given that we would expect the two San Diego sites to be more similar to each other and substantially different from the Shafter site.
+
+%When we examine these same plots for the random forest model in the bottom half of Figure~\ref{fig:error-density}, we see a similar pattern, but the relative difference in error between the training and testing sites is amplified, even between the two San Diego sites.  The similar pattern corroborates the evidence that differences in background pollutants between Shafter and the San Diego sites are a contributing factor. \todo{I think it might be a little more accurate to say that the random forest model is overfitting to all of the conditions of the training site, both environmental and background, b/c the patterns seem pretty different from the linear models and we don't see the same differences between different training/testing pairs.  WGG: I think we do; note that the sites in DEF are out of order wrt to ABC, making it confusing.}   A closer look at Figure~\ref{fig:error-density}e reveals more, however.  As noted with Figure~\ref{fig:error-density}b, the El Cajon site has a narrower distribution of humidity than the Donovan site, resulting in higher errors due to failures in extrapolation.  In Figure~\ref{fig:error-density}e, we see this effect is strongly amplified with the random forest model, providing further evidence that the high capacity of the random forest model is strongly overfitting to the training site, limiting the ability of the models to extrapolate, and hence transfer.  We are are led to conclude that the relatively amplified errors across all three plots is due to overfitting.  As a consequence, random forest's net performance in transfer is not much better than linear regression, especially when the environmental conditions are similar.
+
+\todo{WGG: above, cite Joanna's paper if we corroborate.}
+
+%\begin{figure}[H]
+%\centering
+%\begin{subfigure}{0.45\textwidth}
+%\includegraphics[width=\textwidth]{\baselinedir/subu/error_density_temperature_donovan_NO\textus{2}.png}
+%\caption{Temperature - Linear Regression (NO\textus{2}, Donovan)}
+%\end{subfigure}
+%\begin{subfigure}{0.45\textwidth}
+%\includegraphics[width=\textwidth]{\baselinedir/subu/error_density_temperature_donovan_O\textus{3}.png}
+%\caption{Temperature - Linear Regression (O\textus{3}, Donovan)}
+%\end{subfigure}
+%\caption{}
+%\label{fig:error-density}
+%\end{figure}
+
+\begin{figure}[t]
+\centering
+\begin{subfigure}{0.33\textwidth}
+\includegraphics[width=\textwidth]{\baselinedir/linear/error_density_absolute-humidity_donovan_O3.png}
+\caption{LR, trained at Donovan}
+\end{subfigure}
+\begin{subfigure}{0.33\textwidth}
+\includegraphics[width=\textwidth]{\baselinedir/linear/error_density_absolute-humidity_elcajon_O3.png}
+\caption{LR, trained at El Cajon}
+\end{subfigure}
+\begin{subfigure}{0.33\textwidth}
+\includegraphics[width=\textwidth]{\baselinedir/linear/error_density_absolute-humidity_shafter_O3.png}
+\caption{LR, trained at Shafter}
+\end{subfigure}
+\begin{subfigure}{0.33\textwidth}
+\includegraphics[width=\textwidth]{\baselinedir/subu/error_density_absolute-humidity_donovan_O3.png}
+\caption{RF, trained at Donovan}
+\end{subfigure}
+\begin{subfigure}{0.33\textwidth}
+\includegraphics[width=\textwidth]{\baselinedir/subu/error_density_absolute-humidity_elcajon_O3.png}
+\caption{RF, trained at El Cajon}
+\end{subfigure}
+\begin{subfigure}{0.33\textwidth}
+\includegraphics[width=\textwidth]{\baselinedir/subu/error_density_absolute-humidity_shafter_O3.png}
+\caption{RF, trained at Shafter}
+\end{subfigure}
+\caption{Error density plots for O\textus{3} versus normalized absolute humidity for both Linear Regression (LR) and Random Forest (RF) in a Level 1 benchmark.}
+\label{fig:error-density}
+\end{figure}
+
+
+\subsection{Benefits of Sharing Data Across Sensor Packages}
+In this section, we evaluate the split-NN model architecture's utility for improving the transferability of a calibration model.  The novelty of the split-NN model for calibrating a board's model is its ability include (normalized) data from other boards.  Given that the resources for calibration are limited, the research questions for split-NN revolve around how boards could be best distributed to available field sites.  For a standard modeling technique like random forest, a board has to be placed at three sites for three rounds to experience the wide training distribution that achieves the exceptional transferability observed in the Level 3 benchmarks.  However, with the split-NN model, multiple boards can be deployed for just one round, divided equally across the sites.  Then the data from their boards can be normalized and shared to produce models that we hypothesize to be of similar quality to a Level 3 benchmark, but in one-third the time, in a single round.
+
+To help reveal the value of calibrating multiple boards at once, we performed three one-round benchmarks: 1 board at each of the three sites, 2 boards at each of the three sites, and 3 boards at each of the three sites.  In each of these conditions, a board is trained from a single round of data and tested on the other locations, not its own.  In this vein, these are all Level 1 benchmarks, thus we compare the resulting models against our Level 1 baselines. We expect the split-NN to outperform Level 1 random forest, as the inclusion of more data helps reduce bias. In the situation that there are more boards to calibrate than there are training sites, there is an opportunity to also incorporate data additional boards at the same site.  We expect that a greater multiplicity of boards at each site will produce slightly better models, but with diminishing returns. We evaluated this effect by including training split-NN's with increasing numbers of boards at each site, indicated by the variants Split-NN (3), Split-NN (6), and Split-NN (9), corresponding to having one board at each site, two boards at each site, and three boards at each site.  We perform a similar assessment with two-round (Level 2) benchmarks, still testing only on sites that a board hasn't been trained on.  As previously, we control for the total amount of data, simulating an abbreviated deployment for the Level 2 benchmarks.
+
+Figure~\ref{fig:split-results-lrfe}a-b shows that the split-NN model on average has slightly lower MAE in the Level 1 benchmarks when compared to the random forest model. We see in and Figure~\ref{fig:split-results-lrfe}c-d that the gap widens with the Level 2 benchmark, indicating that the Split-NN model is able to better capitalize on the additional data. The results also support our hypothesis that we receive diminishing returns with additional data. 
+
+The marginal improvement seen in the Level 1 benchmarks has two possible causes.  One possibility is that the difference in behavior between sensors is non-linear. To test, we implemented a full neural network at as the first stage. The results were comparable with a linear regression first stage with no significant improvement, suggesting that the relationship between the sensors is well represented by a linear model. The other possibility is that the pollution distributions have insufficient overlap across sites, compromising the first-stage linear regression to for correct bias. The fact that using two rounds of data (Level 2) does much better suggests that this lack of overlap is a likely culprit. 
+
+%We also find that training the split models on more locations as opposed to a wider range of time achieves marginally lower error, though both exhibit similar performance overall.
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.35\textwidth}
+\includegraphics[width=\textwidth]{results/split-no2-location-level1-mae}
+\caption{Level 1 NO\textus{2}}
+\end{subfigure}
+\begin{subfigure}{0.35\textwidth}
+\includegraphics[width=\textwidth]{results/split-o3-location-level1-mae}
+\caption{Level 1 O\textus{3}}
+\end{subfigure}
+\begin{subfigure}{0.35\textwidth}
+\includegraphics[width=\textwidth]{results/split-no2-location-level2-mae}
+\caption{Level 2 NO\textus{2}}
+\end{subfigure}
+\begin{subfigure}{0.35\textwidth}
+\includegraphics[width=\textwidth]{results/split-o3-location-level2-mae}
+\caption{Level 2 O\textus{3}}
+\end{subfigure}
+\caption{Results of evaluating the split-NN model with a linear regression first stage, compared against the RF model in both Level 1 and Level 2 comparisons. The split-NN model has a lower mean and median error in all conditions. Boxplots are pictured without outliers for clarity.}
+\label{fig:split-results-lrfe}
+\end{figure}
+
+% Seasonal plots
+%\begin{subfigure}{0.35\textwidth}
+%\includegraphics[width=\textwidth]{results/split-no2-seasonal-mae}
+%\caption{Level 1 Seasonal Split-NN neural network results (NO\textus{2})}
+%\end{subfigure}
+%\begin{subfigure}{0.35\textwidth}
+%\includegraphics[width=\textwidth]{results/split-o3-seasonal-mae}
+%\caption{Level 1 Seasonal Split-NN neural network results (O\textus{3})}
+%\end{subfigure}
+%\begin{subfigure}{0.35\textwidth}
+%\includegraphics[width=\textwidth]{results/split-no2-seasonal-level2-mae}
+%\caption{Level 2 Seasonal Split-NN neural network results (NO\textus{2})}
+%\end{subfigure}
+%\begin{subfigure}{0.35\textwidth}
+%\includegraphics[width=\textwidth]{results/split-o3-seasonal-level2-mae}
+%\caption{Level 2 Seasonal Location Split-NN neural network results (O\textus{3})}
+%\end{subfigure}
+
+\iffalse
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.35\textwidth}
+\includegraphics[width=\textwidth]{results/split-no2-location-level1-big-mae}
+\caption{Level 1 NO\textus{2}}
+\end{subfigure}
+\begin{subfigure}{0.35\textwidth}
+\includegraphics[width=\textwidth]{results/split-o3-location-level1-big-mae}
+\caption{Level 1 O\textus{3}}
+\end{subfigure}
+\begin{subfigure}{0.35\textwidth}
+\includegraphics[width=\textwidth]{results/split-no2-location-level2-big-mae}
+\caption{Level 2 NO\textus{2}}
+\end{subfigure}
+\begin{subfigure}{0.35\textwidth}
+\includegraphics[width=\textwidth]{results/split-o3-location-level2-big-mae}
+\caption{Level 2 O\textus{3}}
+\end{subfigure}
+\caption{Results of evaluating the split-NN model with a neural network first stage, compared against the RF model in both Level 1 and Level 2 comparisons. The split-NN model has a lower mean and median error in all conditions. Boxplots are pictured without outliers for clarity.}
+\label{fig:split-results-nnfe}
+\end{figure}
+\fi
+
+\iffalse
+We also evaluated the calibration of a new sensor package using the split-NN approach. As described in Section~\ref{sec:split-nn}, rather than retraining a full calibration model when a new, uncalibrated sensor needs to be deployed, we can colocate it with an already-calibrated low-cost sensor. We then train a new sensor model for the new board, regressing to match the sensor model outputs from the colocated boards. Since the sensor model outputs intermediate values that are then fed into a global calibration model, we have effectively calibrated a new board just through the sensor model. Using this approach we find \todo{WGG: how?} that on average, \todo{WGG: is this additional error over doing it from scratch?  Sounds high.  Our new test will help here.} we incur 3.79 NO\textus{2} MAE and 6.07 O\textus{3} MAE.
+\fi
+
+
+%\begin{figure}
+%    \includegraphics[width=0.35\textwidth]{writeup/img/levels-retrain}
+%    \caption{Calibrating a new board $N + 1$}
+%\end{figure}
+
+\iffalse
+
+\begin{itemize}
+    \item Given these failure modes, how can data collection and model training be improved to overcome these failures?
+      \begin{itemize}
+          \item Collect data from multiple sites and either:
+          \begin{itemize}
+            \item Average models over multiple diverse locations 
+            \item Pool all the data together and build a single model
+          \end{itemize}
+      \end{itemize}
+    \item Given that it is typical to calibrate many sensors, how should calibration data from multiple sensors be employed to achieve the best results?
+      \begin{itemize}
+          \item Collect data from all sensors to be calibrated and build a single shared model
+      \end{itemize}
+    \item Finally, (how) can multiple-site techniques and multiple-sensor techniques be combined?
+      \begin{itemize}
+         \item Neural networks work, and random forest doesn’t, because they are more modular (differentiability)
+      \end{itemize}
+    \item Can a new sensor can be affordably and accurately calibrated without having to repeat the whole data collection cycle?
+      \begin{itemize}
+          \item Simple colocation with a single sensor
+          \item Match new sensor to the global model through colocation with one of the calibrated sensors
+      \end{itemize}
+\end{itemize}
+\fi
+
+\subsection{Discussion}
+
+As low-cost sensor studies move from understanding sensor signal performance to how this performance is affected by moving sensors to new sampling locations or utilizing them in new applications, it is important that the results are translated into best practices to support the collection of usable high quality data. This is particularly important given the interest in sensors by community-based organizations and citizen scientists. Although the present study examined only electrochemical O\textus{3} and NO\textus{2} sensors and the sampling sites were limited to three in California, it adds to a body of evidence that location matters in the calibration of low-cost sensors because the background environmental conditions matter.  With this in mind, we make the following observations and recommendations.
+
+%Given that the present study examined only electrochemical O\textus{3} and NO\textus{2} sensors and the sampling sites were limited to three in California, there is a need to continue examining different sensors and to learn more about the consistency of results across locations and situations. 
+We observed how prediction performance degrades when a sensor is moved to a new location, especially for high-capacity modeling techniques. In particular, training a complex random forest calibration model will likely result in very low error at a colocated site but can incur significant error at a different site. Although their predictions at a new site will have lower error than linear regression, the error they have at the training site will likely not be representative of their error in practice.  A linear model, on the other hand, despite not predicting as well at the training site, will not have significantly more error at testing time.  Thus, if it is important to know the likely error of your calibration model under transfer, it would be best to use a low-capacity method like linear regression.
+
+When we drilled down to investigate the contributors to error when changing location, we found that bias error was a significant contributor in many cases. This is interesting because bias error indicates a loss of accuracy (a non-random additive error) rather than a loss of precision (random noise). This suggests that when moving a sensor to a new location, if the bias can somehow be detected, then it may be possible to make a bias correction to improve model performance. This result also motivates the use of the split neural network architecture, which has a model-specific correction stage that is designed to learn unbiased representations of sensor measurements.
+
+We had expected that training at multiple sites would provide much better transferability, but the improvements were not substantial, suggesting that the high-capacity models were mostly improving due to implicit overlap in distributions and not actual generalization.  This suggests that calibration should be directed at capturing the widest conditions possible, for example using many field sites with varying conditions, so as to create an overlap between the distributions of training and use.  This recommendation is further supported by the observation that the Level 3 benchmarks performed nearly as well as the Level 0 benchmarks, in spite of carrying the load of a much wider distribution in the models.
+
+The split-NN approach provides a potentially economical approach to creating overlap in distributions since sensors can share their data for calibration.  That is, when calibrating multiple sensors, rather than colocating multiple sensors at a field site and rotating those sensors over time, it makes sense to distribute the sensors to as many field sites as possible to capture the widest distribution of conditions. The split-NN method has the additional benefit of being able to train a calibration model for a sensor that has never been colocated with a reference instrument. By simply colocating an uncalibrated sensor with a calibrated sensor and training the sensor-specific model to match the intermediate output of the calibrated sensor, the uncalibrated sensor can leverage the same global calibration model. More study will be required to see how well the split-NN approach scales as the training data distribution increases and to determine the bounds on calibration without reference colocation.
+
+\todo{WGG: graphs don't show this: Location Test will help.} Only when we employed the split-NN technique did we get the expected results.
+
+%Considering these limitations, there are a number of recommendations drawn from the results of this study that may be useful for communities and citizens scientists interested in using low-cost sensors. 
+% 
+%\begin{itemize}
+%    \item When conducting a “field calibration” (or colocating your sensors with trusted reference monitors), colocating your sensors at multiple reference locations will likely improve the reliability of the data from your sensors when they are moved to the field sites.
+%    \item If you are conducting a field calibration and are unsure of how different your field sites are from your calibration site, consider choosing a simpler calibration model, such as a multiple linear regression model.
+%    \item When conducting a field calibration, placing sensors at different colocation sites then pooling that data and building a calibration model built on data from multiple sites will result in a calibration model that is more robust in new locations. 
+%end{itemize}
+
+%Essentially, the recommendations presented here emphasize the need for thoughtful study design when using low-cost sensors. Users need to be thoughtful about where and how calibration is occurring, as well as any potential repercussions of a particular choice – for example the decision to use a high-capacity machine learning model.
+
+
+%Previous text:
+%
+%\begin{itemize}
+%    \item \todo{Model size}
+%    \item \todo{Calibrate over a lot of sites}
+%    \item If one doesn't have access to multiple sites (or only two instead of three), can multiple locations be approximated by just training longer at one site? \emph{maybe}
+%    \item Translate what we've learned into practical advice for an average citizen scientist group - how can they use this information to improve their work and given typical real-world constraints where can they focus their efforts in order to get the best data quality possible (maybe this section should include a list of hypothetical) 
+%\end{itemize}
+
+\section{Conclusion}
+
+As low-cost gas-phase sensors are increasingly being adopted for citizen science efforts and community-based studies, there is a need to better understand what contributes to accurate sensing.  A key question is how a change in background environmental or pollutant conditions, often unique to a location, affects accuracy.  A rotating deployment strategy enabled benchmarking the transferability of models and investigating how to improve accuracy. We found that overfitting is a concern, especially when transferring high-capacity models like random forest that are trained with data that will not be representative of the conditions of use. Our benchmarks indicate that widening the data distribution is a good strategy to make models more robust to transfer, but that the best results require the training distribution to contain the distribution encountered in use.  A tantalizing result is that much of the error introduced by transfer was bias, which may be correctable.  When multiple sensors based on the same technology are being trained at the same time, we found that a split neural network architecture increases the robustness of model transfer by giving a sensor's model access to normalized data from other sensors, even at other locations, hence widening the distribution without requiring additional data collection.  This method also enables accurately calibrating new sensors against existing calibrated sensors at incremental cost.
+
+In the future work we will be extending this work to answer open questions that we believe are relevant to the future of low-cost sensor calibration.  As one example, there are questions about the effect of temporal resolution on accuracy. Currently, our MetaSense sensors are sampled every five seconds, but the ground-truth data provided from reference monitors is minute-averaged. By averaging our own sensor measurements every minute, we discard data that could be relevant for calibration. Recent advances in recurrent neural networks for sequence prediction might help leverage the high-resolution data for robust prediction. As a second example, a potential application of low-cost sensing is truly mobile sensing with person- or vehicle-mounted sensors. Deployments such as these will raise questions about the effects of mobility on sensing accuracy, such as rapidly changing conditions, with few studies to date~\citep{arfire2016mitigating}.
+
+% A dynamic data distribution is a challenge that we hope our methods can generalize to.
+
+\section{Acknowledgements}
+
+We would like to thank partners at the San Diego Air Pollution Control District as well as San Joaquin Valley Air Pollution Control District for their support throughout this deployment. 
+
+\iffalse
+\begin{itemize}
+    \item What is the tradeoff between resolution and accuracy, if any. 
+    \item Mobility causes fast changes. Brief high exposures could be harmful.
+    \item Our sensors change slowly, taking up to 30 seconds to respond to a change in signal
+    \item Noise, Drift?
+\end{itemize}
+\fi
+
+\bibliographystyle{copernicus}
+\bibliography{main.bib}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\clearpage
+\appendix
+\setcounter{table}{0}
+
+\iffalse
+\section{Data}
+
+We have been collecting data from nine boards
+from three sites in southern California.
+\begin{enumerate}
+    \item El Cajon
+    \item Donovan
+    \item Shafter
+\end{enumerate}
+We have split up the boards and rotated the boards
+between locations every two weeks (see \autoref{tab:board-rotations}).
+
+We do not have CO data for Shafter and Donovan, so we will focus only on
+O\textus{3} and NO\textus{2}.
+\fi
+
+
+\section{Environment and Pollutant Distributions}\label{Distributions}
+
+%\todo{Have these been updated to reflect the data we are using? (i.e., from R2, R2, and R4}
+%\todo{Recommend for the Distribution section just keep plots B5, B6, B8, B10 - those would be sufficient, keeping all might be too much (WGG: DONE)}
+
+
+%\subsection{Environment}
+
+\iffalse
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.5\textwidth]{results/distributions/temperature.png}
+\caption{Temperature distribution based on
+location}
+\label{fig:temperature}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.5\textwidth]{results/distributions/humidity.png}
+\caption{Absolute humidity distribution based on
+location}
+\label{fig:humidity}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.32\textwidth}
+\includegraphics[width=\textwidth]{results/distributions/location_donovan_temperature.png}
+\caption{Donovan}
+\end{subfigure}
+\begin{subfigure}{0.32\textwidth}
+\includegraphics[width=\textwidth]{results/distributions/location_elcajon_temperature.png}
+\caption{El Cajon}
+\end{subfigure}
+\begin{subfigure}{0.32\textwidth}
+\includegraphics[width=\textwidth]{results/distributions/location_shafter_temperature.png}
+\caption{Shafter}
+\end{subfigure}
+\caption{Temperature at locations}
+\label{fig:temperature-locations}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.32\textwidth}
+\includegraphics[width=\textwidth]{results/distributions/location_donovan_humidity.png}
+\caption{Donovan}
+\end{subfigure}
+\begin{subfigure}{0.32\textwidth}
+\includegraphics[width=\textwidth]{results/distributions/location_elcajon_humidity.png}
+\caption{El Cajon}
+\end{subfigure}
+\begin{subfigure}{0.32\textwidth}
+\includegraphics[width=\textwidth]{results/distributions/location_shafter_humidity.png}
+\caption{Shafter}
+\end{subfigure}
+\caption{Absolute humidity at locations}
+\label{fig:humidity-locations}
+\end{figure}
+
+\fi
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.32\textwidth}
+\includegraphics[width=\textwidth]{results/distributions/round1_temperature.png}
+\caption{Round 1}
+\end{subfigure}
+\begin{subfigure}{0.32\textwidth}
+.\includegraphics[width=\textwidth]{results/distributions/round2_temperature.png}
+\caption{Round 2}
+\end{subfigure}
+\begin{subfigure}{0.32\textwidth}
+\includegraphics[width=\textwidth]{results/distributions/round3_temperature.png}
+\caption{Round 3}
+\end{subfigure}
+\caption{Temperature distributions for each location, by round.}
+\label{fig:temperature-rounds}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.32\textwidth}
+\includegraphics[width=\textwidth]{results/distributions/round1_humidity.png}
+\caption{Round 1}
+\end{subfigure}
+\begin{subfigure}{0.32\textwidth}
+\includegraphics[width=\textwidth]{results/distributions/round2_humidity.png}
+\caption{Round 2}
+\end{subfigure}
+\begin{subfigure}{0.32\textwidth}
+\includegraphics[width=\textwidth]{results/distributions/round3_humidity.png}
+\caption{Round 3}
+\end{subfigure}
+\caption{Humidity distributions for each location, by round.}
+\label{fig:humidity-rounds}
+\end{figure}
+
+
+%\subsection{Pollutant values}
+
+\iffalse
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.32\textwidth}
+\includegraphics[width=\textwidth]{results/distributions/location_donovan_no2.png}
+\caption{Donovan}
+\end{subfigure}
+\begin{subfigure}{0.32\textwidth}
+\includegraphics[width=\textwidth]{results/distributions/location_elcajon_no2.png}
+\caption{El Cajon}
+\end{subfigure}
+\begin{subfigure}{0.32\textwidth}
+\includegraphics[width=\textwidth]{results/distributions/location_shafter_no2.png}
+\caption{Shafter}
+\end{subfigure}
+\caption{NO\textus{2} at locations}
+\label{fig:no2-locations}
+\end{figure}
+
+\fi
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.32\textwidth}
+\includegraphics[width=\textwidth]{results/distributions/round1_no2.png}
+\caption{Round 1}
+\end{subfigure}
+\begin{subfigure}{0.32\textwidth}
+\includegraphics[width=\textwidth]{results/distributions/round2_no2.png}
+\caption{Round 2}
+\end{subfigure}
+\begin{subfigure}{0.32\textwidth}
+\includegraphics[width=\textwidth]{results/distributions/round3_no2.png}
+\caption{Round 3}
+\end{subfigure}
+\caption{NO\textus{2} distributions for each location, by round.}
+\label{fig:no2-rounds}
+\end{figure}
+
+\iffalse
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.32\textwidth}
+\includegraphics[width=\textwidth]{results/distributions/location_donovan_o3.png}
+\caption{Round 1}
+\end{subfigure}
+\begin{subfigure}{0.32\textwidth}
+\includegraphics[width=\textwidth]{results/distributions/location_elcajon_o3.png}
+\caption{Round 2}
+\end{subfigure}
+\begin{subfigure}{0.32\textwidth}
+\includegraphics[width=\textwidth]{results/distributions/location_shafter_o3.png}
+\caption{Round 3}
+\end{subfigure}
+\caption{O\textus{3} at locations}
+\label{fig:o3-locations}
+\end{figure}
+
+\fi
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.32\textwidth}
+\includegraphics[width=\textwidth]{results/distributions/round1_o3.png}
+\caption{Round 1}
+\end{subfigure}
+\begin{subfigure}{0.32\textwidth}
+\includegraphics[width=\textwidth]{results/distributions/round2_o3.png}
+\caption{Round 2}
+\end{subfigure}
+\begin{subfigure}{0.32\textwidth}
+\includegraphics[width=\textwidth]{results/distributions/round3_o3.png}
+\caption{Round 3}
+\end{subfigure}
+\caption{O\textus{3} distributions for each location, by round.}
+\label{fig:o3-rounds}
+\end{figure}
+
+\section{Additional Error Density Plots}\label{sec:remaining-error-density-plots}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.33\textwidth}
+\includegraphics[width=\textwidth]{\baselinedir/linear/error_density_temperature_donovan_O3.png}
+\caption{LR, trained at Donovan}
+\end{subfigure}
+\begin{subfigure}{0.33\textwidth}
+\includegraphics[width=\textwidth]{\baselinedir/linear/error_density_temperature_elcajon_O3.png}
+\caption{LR, trained at El Cajon}
+\end{subfigure}
+\begin{subfigure}{0.33\textwidth}
+\includegraphics[width=\textwidth]{\baselinedir/linear/error_density_temperature_shafter_O3.png}
+\caption{LR, trained at Shafter}
+\end{subfigure}
+\begin{subfigure}{0.33\textwidth}
+\includegraphics[width=\textwidth]{\baselinedir/subu/error_density_temperature_donovan_O3.png}
+\caption{RF, trained at Donovan}
+\end{subfigure}
+\begin{subfigure}{0.33\textwidth}
+\includegraphics[width=\textwidth]{\baselinedir/subu/error_density_temperature_elcajon_O3.png}
+\caption{RF, trained at El Cajon}
+\end{subfigure}
+\begin{subfigure}{0.33\textwidth}
+\includegraphics[width=\textwidth]{\baselinedir/subu/error_density_temperature_shafter_O3.png}
+\caption{RF, trained at Shafter}
+\end{subfigure}
+\caption{Error density plots for O\textus{3} versus temperature for both Linear Regression (LR) and Random Forest (RF) in a Level 1 benchmark.}
+\label{fig:error-density-O3-temp}
+\end{figure}
+
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.33\textwidth}
+\includegraphics[width=\textwidth]{\baselinedir/linear/error_density_absolute-humidity_donovan_NO2.png}
+\caption{LR, trained at Donovan}
+\end{subfigure}
+\begin{subfigure}{0.33\textwidth}
+\includegraphics[width=\textwidth]{\baselinedir/linear/error_density_absolute-humidity_elcajon_NO2.png}
+\caption{LR, trained at El Cajon}
+\end{subfigure}
+\begin{subfigure}{0.33\textwidth}
+\includegraphics[width=\textwidth]{\baselinedir/linear/error_density_absolute-humidity_shafter_NO2.png}
+\caption{LR, trained at Shafter}
+\end{subfigure}
+\begin{subfigure}{0.33\textwidth}
+\includegraphics[width=\textwidth]{\baselinedir/subu/error_density_absolute-humidity_donovan_NO2.png}
+\caption{RF, trained at Donovan}
+\end{subfigure}
+\begin{subfigure}{0.33\textwidth}
+\includegraphics[width=\textwidth]{\baselinedir/subu/error_density_absolute-humidity_elcajon_NO2.png}
+\caption{RF, trained at El Cajon}
+\end{subfigure}
+\begin{subfigure}{0.33\textwidth}
+\includegraphics[width=\textwidth]{\baselinedir/subu/error_density_absolute-humidity_shafter_NO2.png}
+\caption{RF, trained at Shafter}
+\end{subfigure}
+\caption{Error density plots for NO\textus{2} versus absolute humidity for both Linear Regression (LR) and Random Forest (RF) in a Level 1 benchmark.}
+\label{fig:error-density-NO2-humidity}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.33\textwidth}
+\includegraphics[width=\textwidth]{\baselinedir/linear/error_density_absolute-humidity_donovan_NO2.png}
+\caption{LR, trained at Donovan}
+\end{subfigure}
+\begin{subfigure}{0.33\textwidth}
+\includegraphics[width=\textwidth]{\baselinedir/linear/error_density_absolute-humidity_elcajon_NO2.png}
+\caption{LR, trained at El Cajon}
+\end{subfigure}
+\begin{subfigure}{0.33\textwidth}
+\includegraphics[width=\textwidth]{\baselinedir/linear/error_density_absolute-humidity_shafter_NO2.png}
+\caption{LR, trained at Shafter}
+\end{subfigure}
+\begin{subfigure}{0.33\textwidth}
+\includegraphics[width=\textwidth]{\baselinedir/subu/error_density_absolute-humidity_donovan_NO2.png}
+\caption{RF, trained at Donovan}
+\end{subfigure}
+\begin{subfigure}{0.33\textwidth}
+\includegraphics[width=\textwidth]{\baselinedir/subu/error_density_absolute-humidity_elcajon_NO2.png}
+\caption{RF, trained at El Cajon}
+\end{subfigure}
+\begin{subfigure}{0.33\textwidth}
+\includegraphics[width=\textwidth]{\baselinedir/subu/error_density_absolute-humidity_shafter_NO2.png}
+\caption{RF, trained at Shafter}
+\end{subfigure}
+\caption{Error density plots for NO\textus{2} versus absolute-humidity for both Linear Regression (LR) and Random Forest (RF) in a Level 1 benchmark.}
+\label{fig:error-density-NO2-temp}
+\end{figure}
+
+\iffalse
+\section{Basic calibration results}
+
+A calibration model takes in sensor readings and environment
+variables and outputs pollutant levels. In this basic setup,
+we train a model for each board.
+We aim to train models that are robust after moving location.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Level 0} & Train on location A and test on location A \\ \hline
+\textbf{Level 1} & Train on location A and test on location B \\ \hline
+\textbf{Level 2} & Train on location A and B and test on location C \\ \hline
+\textbf{Level 3} & Train on location A, B, and C and test on location A \\ \hline
+\end{tabular}
+\caption{Description of different types of benchmarks.}
+\label{tab:levels}
+\end{table}
+
+We benchmark four different models: linear regression (linear), random forest regressors based on \citep{Zimmerman2018},
+a 2-layer neural network (NN[2]), and a 4-layer neural network (NN[4]). The ideal model will
+both predict pollutant levels accurately and
+generalize across locations.
+
+To benchmark, we first take our data sets (25 total, see \autoref{tab:board-rotations}), and partition each into training and testing sets (20\% reserved for testing).
+We perform several types of benchmarks,
+each to learn about the transferrability of each model (see \autoref{tab:levels}).
+In general, we expect Level 0 and Level 3 performance to be the best, as they involve training and testing on data from the same distribution. Furthermore, we expected Level 2 to have lower error than Level 1, because Level 2 is trained on more data and a wider distribution of data (two locations vs one location).
+If a model's Level 1 and Level 2 error are close to Level 0 and Level 3, then the model transfers well. Otherwise, the model overfits to its location.
+
+
+These raw results are in \autoref{sec:simpleresults}. We split results into training vs. testing results, where we expect train performance to be better than test. Overall, we see that random forests have the lowest Level 0 and Level 3 error. This is consistent with results we see in \citet{Zimmerman2018}. We observe when comparing Level 1 error difference (Level 1 train minus Level 1 test), random forests suffer great drops in performance. This hints that RFs are overfitting to the training data, even if they report the lowest test error for Level 0 and Level 3. See \autoref{fig:generalization} for details.
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.45\textwidth}
+\includegraphics[width=\textwidth]{\baselinedir/NO2" "MAE_difference.png}
+\caption{NO\textus{2}}
+\end{subfigure}
+\begin{subfigure}{0.45\textwidth}
+\includegraphics[width=\textwidth]{\baselinedir/O3" "MAE_difference.png}
+\caption{O\textus{3}}
+\end{subfigure}
+\caption{Difference plots. Train minus test errors for various models. A smaller value means that the models transfer better.}
+\label{fig:generalization}
+\end{figure}
+
+\section{Neural representation learning}
+
+We now present split-neural network results: we split
+up calibration into two stages, a sensor model
+and a pollutant model, which we will call $s_i$ and $c$
+respectively.
+Given a sensor readings $x$ from board $i$,
+and environment readings $e$
+we obtain a calibrated reading $y$ by simply passing it through
+the sensor model, then the pollutant model, i.e.
+\begin{align*}
+    y = c(s_i(x), e)
+\end{align*}
+We can learn individual sensor models for each board,
+but the pollutant model is shared across boards. This allows
+us to pool data across boards to learn the pollutant model.
+Furthermore, environment variables are only 
+included in the pollutant model, which hopefully enables
+a stronger fit with a very complex pollutant model.
+
+Each $s_i(x)$ outputs a ``sensor representation'', which is chosen
+to be some fixed dimension $d$. We hope that the sensor representation
+contains the minimal information to produce calibrated readings.
+
+We experiment with each $s_i$ being a linear regression model,
+and $c$ being a deep neural network (two layers, 100 width ReLU). 
+Each set of data we collect
+is identified by a triplet of information (round, location, board number). In total, we have 25 of such data sets as defined in \autoref{tab:board-rotations}. To benchmark these split models, we train on all of these data sets, but
+hold one triple out, resulting in a
+total training set size of 24 data sets and test size of 1 data set. This results in a total of 25 experiments
+for which we boxplot the results.
+We compare the split models to our four static models (Linear, NN[2], NN[4], Random Forest) by comparing the split-NN performance on the held out data set to the Level 2 performance of the four models.
+Level 2 performance corresponds to training on two locations
+and testing on the third. The split model has access to the same training data as the Level 2 models, but with the addition of data from other boards. The hope is this additional board data can help improve upon Level 2 performance, which can be thought of as the ``best'' possible transfer performance.
+
+\begin{figure}[H]
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{\splitdir/linear/no2mae.png}
+\caption{NO\textus{2} MAE}
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{\splitdir/linear/o3mae.png}
+\caption{O\textus{3} MAE}
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{\splitdir/linear/no2cvmae.png}
+\caption{NO\textus{2} CvMAE}
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{\splitdir/linear/o3cvmae.png}
+\caption{O\textus{3} CvMAE}
+\end{subfigure}
+\caption{Comparison of errors of split-NN and Linear. Training size corresponds to a Level 1 or Level 2 comparison.}
+\end{figure}
+
+\begin{figure}[H]
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{\splitdir/nn-2/no2mae.png}
+\caption{NO\textus{2} MAE}
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{\splitdir/nn-2/o3mae.png}
+\caption{O\textus{3} MAE}
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{\splitdir/nn-2/no2cvmae.png}
+\caption{NO\textus{2} CvMAE}
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{\splitdir/nn-2/o3cvmae.png}
+\caption{O\textus{3} CvMAE}
+\end{subfigure}
+\caption{Comparison of errors of split-NN and NN[2]. Training size corresponds to a Level 1 or Level 2 comparison.}
+\end{figure}
+
+\begin{figure}[H]
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{\splitdir/nn-4/no2mae.png}
+\caption{NO\textus{2} MAE}
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{\splitdir/nn-4/o3mae.png}
+\caption{O\textus{3} MAE}
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{\splitdir/nn-4/no2cvmae.png}
+\caption{NO\textus{2} CvMAE}
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{\splitdir/nn-4/o3cvmae.png}
+\caption{O\textus{3} CvMAE}
+\end{subfigure}
+\caption{Comparison of errors of split-NN and NN[4]. Training size corresponds to a Level 1 or Level 2 comparison.}
+\end{figure}
+
+\begin{figure}[H]
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{\splitdir/subu/no2mae.png}
+\caption{NO\textus{2} MAE}
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{\splitdir/subu/o3mae.png}
+\caption{O\textus{3} MAE}
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{\splitdir/subu/no2cvmae.png}
+\caption{NO\textus{2} CvMAE}
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{\splitdir/subu/o3cvmae.png}
+\caption{O\textus{3} CvMAE}
+\end{subfigure}
+\caption{Comparison of errors of split-NN and random forest. Training size corresponds to a Level 1 or Level 2 comparison.}
+\end{figure}
+
+To further accentuate the improvement, we can compare
+the difference in performance between split-NN and the four models. In these plots, a more negative value corresponds to a larger improvement.
+
+\begin{figure}[H]
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{\splitdir/linear/no2mae-diff.png}
+\caption{NO\textus{2} MAE Improvement}
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{\splitdir/linear/o3mae-diff.png}
+\caption{O\textus{3} MAE Improvement}
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{\splitdir/linear/no2cvmae-diff.png}
+\caption{NO\textus{2} CvMAE Improvement}
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{\splitdir/linear/o3cvmae-diff.png}
+\caption{O\textus{3} CvMAE Improvement}
+\end{subfigure}
+\caption{Comparison of errors of split-NN and Linear.}
+\end{figure}
+
+\begin{figure}[H]
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{\splitdir/nn-2/no2mae-diff.png}
+\caption{NO\textus{2} MAE Improvement}
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{\splitdir/nn-2/o3mae-diff.png}
+\caption{O\textus{3} MAE Improvement}
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{\splitdir/nn-2/no2cvmae-diff.png}
+\caption{NO\textus{2} CvMAE Improvement}
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{\splitdir/nn-2/o3cvmae-diff.png}
+\caption{O\textus{3} CvMAE Improvement}
+\end{subfigure}
+\caption{Comparison of errors of split-NN and NN[2].}
+\end{figure}
+
+\begin{figure}[H]
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{\splitdir/nn-4/no2mae-diff.png}
+\caption{NO\textus{2} MAE Improvement}
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{\splitdir/nn-4/o3mae-diff.png}
+\caption{O\textus{3} MAE Improvement}
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{\splitdir/nn-4/no2cvmae-diff.png}
+\caption{NO\textus{2} CvMAE Improvement}
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{\splitdir/nn-4/o3cvmae-diff.png}
+\caption{O\textus{3} CvMAE Improvement}
+\end{subfigure}
+\caption{Comparison of errors of split-NN and NN[4].}
+\end{figure}
+
+\begin{figure}[H]
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{\splitdir/subu/no2mae-diff.png}
+\caption{NO\textus{2} MAE Improvement}
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{\splitdir/subu/o3mae-diff.png}
+\caption{O\textus{3} MAE Improvement}
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{\splitdir/subu/no2cvmae-diff.png}
+\caption{NO\textus{2} CvMAE Improvement}
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+\includegraphics[width=\textwidth]{\splitdir/subu/o3cvmae-diff.png}
+\caption{O\textus{3} CvMAE Improvement}
+\end{subfigure}
+\caption{Comparison of errors of split-NN and random forest.}
+\end{figure}
+
+\fi
+
+\renewcommand{\thetable}{\Alph{section}.\arabic{table}}
+
+\section{Summaries of Data for each Location and Round}
+\label{sec:summaryresults}
+
+\begin{table}[H]
+\scriptsize
+\input{results/distributions/location_summary.tex}
+\caption{Summary of data set grouped by location}
+\label{tab:locationsummary}
+\end{table}
+
+\begin{table}[H]
+\scriptsize
+\input{results/distributions/round_summary.tex}
+\caption{Summary of data set grouped by round}
+\label{tab:roundsummary}
+\end{table}
+
+\section{Raw Results for Baseline Calibration Models}
+\label{sec:simpleresults}
+The following the complete error results for the trained models across the various conditions.  In these tables, the modeling methods are labeled as MLR for multiple linear regression, NN-2 for 2-layer neural network, NN-4 for 4-layer neural network, and RF for random forest, as described in Section~\ref{sec:calibration-methods}.  Likewise, the error measures are labeled as MAE for mean absolute error, CvMAE for coefficient of variation of the mean absolute error, MBE for mean bias error, MSE for mean standard error, $\textrm{R}^2$ is the coefficient of determination, crMSE for centered root mean square error, and rMSE for root mean squared error.  The results are disaggregated by test and train sites, and averaged across the sensor packages.
+
+\input{results/error_tables/train-level0-no2.tex}
+\input{results/error_tables/test-level0-no2.tex}
+\input{results/error_tables/train-level0-o3.tex}
+\input{results/error_tables/test-level0-o3.tex}
+
+\input{results/error_tables/train-level1-no2.tex}
+\input{results/error_tables/test-level1-no2.tex}
+\input{results/error_tables/train-level1-o3.tex}
+\input{results/error_tables/test-level1-o3.tex}
+
+\input{results/error_tables/train-level2-no2.tex}
+\input{results/error_tables/test-level2-no2.tex}
+\input{results/error_tables/train-level2-o3.tex}
+\input{results/error_tables/test-level2-o3.tex}
+
+\input{results/error_tables/train-level3-no2.tex}
+\input{results/error_tables/test-level3-no2.tex}
+\input{results/error_tables/train-level3-o3.tex}
+\input{results/error_tables/test-level3-o3.tex}
+\clearpage
+
+%\todo{WGG: should we continue reporting Split NN as a comparison, or just include the raw results like the others?  Tables are very long, too long for the page, BTW.}
+\section{Split Neural Network results}
+
+\begin{table}[H]
+\centering
+\scriptsize
+\input{results/splits-500-10relu-seasonal-size3-level1-big/level1/test.tex}
+\caption{Level 1 test results for Split-NN (Size 3, O\textus{3})}
+\end{table}
+
+\begin{table}[H]
+\centering
+\scriptsize
+\input{results/splits-500-10relu-seasonal-size9-level1-big/level1/test.tex}
+\caption{Level 1 test results for Split-NN (Size 9, O\textus{3})}
+\end{table}
+
+\begin{table}[H]
+\centering
+\scriptsize
+\input{results/splits-500-10relu-seasonal-size3-level2-big/level1/test.tex}
+\caption{Level 2 test results for Split-NN (Size 3, O\textus{3})}
+\end{table}
+
+\begin{table}[H]
+\centering
+\scriptsize
+\input{results/splits-500-10relu-seasonal-size9-level2-big/level1/test.tex}
+\caption{Level 2 test results for Split-NN (Size 9, O\textus{3})}
+\end{table}
+
+
+%\end{landscape}
+\end{document}

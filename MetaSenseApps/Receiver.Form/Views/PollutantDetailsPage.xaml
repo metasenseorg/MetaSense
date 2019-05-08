@@ -1,0 +1,250 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:chart="clr-namespace:Syncfusion.SfChart.XForms;assembly=Syncfusion.SfChart.XForms"
+             xmlns:prism="clr-namespace:Prism.Mvvm;assembly=Prism.Forms"
+             prism:ViewModelLocator.AutowireViewModel="True"
+             x:Class="Receiver.Views.PollutantDetailsPage"
+             BackgroundColor="{StaticResource BackgroundColor}"
+             NavigationPage.HasNavigationBar="False">
+    <ContentPage.Content>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="5*"/>
+                <RowDefinition Height="15*"/>
+                <RowDefinition Height="40*"/>
+                <RowDefinition Height="40*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Frame Grid.Row="0"
+                   Grid.Column="0"
+                   Padding="4"
+                   BackgroundColor="{StaticResource StandardTextColor}">
+                <Label Text="CitiSense"
+                           HorizontalOptions="Fill"
+                           VerticalOptions="Center"
+                           TextColor="White"
+                           Font="Bold, 15" />
+            </Frame>
+            <StackLayout Grid.Row="1"
+                         Grid.Column="0">
+                <Label 
+                   Text="Pollutant Details"
+                   TextColor="White"
+                   Font="Bold, 40"
+                   HorizontalOptions="Center"/>
+                <Label Text="{Binding LastMessageReceivedAt}"
+                       TextColor="{StaticResource StandardTextColor}"
+                       Font="Default, 18"
+                       HorizontalOptions="End"
+                       Margin="0,0,10,0"/>
+                <BoxView HeightRequest="2"
+                         HorizontalOptions="Fill"
+                         Color="{StaticResource StandardTextColor}" />
+            </StackLayout>
+            <Grid Grid.Row="2"
+                  Grid.Column="0"
+                  ColumnSpacing="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="60*"/>
+                    <ColumnDefinition Width="40*"/>
+                </Grid.ColumnDefinitions>
+                <!--boxviews serve as background color-->
+                <BoxView Grid.Row="0"
+                         Grid.Column="0"
+                         Color="{Binding NO2BackgroundColor}"/>
+                <BoxView Grid.Row="0"
+                         Grid.Column="1"
+                         Color="{Binding NO2BackgroundColor}"/>
+                <BoxView Grid.Row="1"
+                         Grid.Column="0"
+                         Color="{Binding O3BackgroundColor}"/>
+                <BoxView Grid.Row="1"
+                         Grid.Column="1"
+                         Color="{Binding O3BackgroundColor}"/>
+                <BoxView Grid.Row="2"
+                         Grid.Column="0"
+                         Color="{Binding COBackgroundColor}"/>
+                <BoxView Grid.Row="2"
+                         Grid.Column="1"
+                         Color="{Binding COBackgroundColor}"/>
+
+                <Label Grid.Row="0"
+                       Grid.Column="0"
+                       Text="NO2 (Nitrogen Dioxide)"
+                       TextColor="{Binding NO2TextColor}"
+                       Font="Default, 18"
+                       HorizontalOptions="Start"
+                       VerticalOptions="Center"
+                       Margin="10,0,10,0"/>
+                <Label Grid.Row="0"
+                       Grid.Column="1"
+                       Text="{Binding NO2ppb}"
+                       TextColor="{Binding NO2TextColor}"
+                       Font="Default, 18"
+                       HorizontalOptions="End"
+                       VerticalOptions="Center"
+                       Margin="10,0,10,0"/>
+                <Label Grid.Row="1"
+                       Grid.Column="0"
+                       Text="Ozone"
+                       TextColor="{Binding O3TextColor}"
+                       Font="Default, 18"
+                       HorizontalOptions="Start"
+                       VerticalOptions="Center"
+                       Margin="10,0,10,0"/>
+                <Label Grid.Row="1"
+                       Grid.Column="1"
+                       Text="{Binding O3ppb}"
+                       TextColor="{Binding O3TextColor}"
+                       Font="Default, 18"
+                       HorizontalOptions="End"
+                       VerticalOptions="Center"
+                       Margin="10,0,10,0"/>
+                <Label Grid.Row="2"
+                       Grid.Column="0"
+                       Text="CO (Carbon Monoxide)"
+                       TextColor="{Binding COTextColor}"
+                       Font="Default, 18"
+                       HorizontalOptions="Start"
+                       VerticalOptions="Center"
+                       Margin="10,0,10,0"/>
+                <Label Grid.Row="2"
+                       Grid.Column="1"
+                       Text="{Binding COppm}"
+                       TextColor="{Binding COTextColor}"
+                       Font="Default, 18"
+                       HorizontalOptions="End"
+                       VerticalOptions="Center"
+                       Margin="10,0,10,0"/>
+                <Label Grid.Row="3"
+                       Grid.Column="0"
+                       Text="Temperature (F)"
+                       TextColor="{StaticResource StandardTextColor}"
+                       Font="Default, 18"
+                       HorizontalOptions="Start"
+                       VerticalOptions="Center"
+                       Margin="10,0,10,0"/>
+                <Label Grid.Row="3"
+                       Grid.Column="1"
+                       Text="{Binding Temperature}"
+                       TextColor="{StaticResource StandardTextColor}"
+                       Font="Default, 18"
+                       HorizontalOptions="End"
+                       VerticalOptions="Center"
+                       Margin="10,0,10,0"/>
+                <Label Grid.Row="4"
+                       Grid.Column="0"
+                       Text="Humidity"
+                       TextColor="{StaticResource StandardTextColor}"
+                       Font="Default, 18"
+                       HorizontalOptions="Start"
+                       VerticalOptions="Center"
+                       Margin="10,0,10,0"/>
+                <Label Grid.Row="4"
+                       Grid.Column="1"
+                       Text="{Binding Humidity}"
+                       TextColor="{StaticResource StandardTextColor}"
+                       Font="Default, 18"
+                       HorizontalOptions="End"
+                       VerticalOptions="Center"
+                       Margin="10,0,10,0"/>
+                <Label Grid.Row="5"
+                       Grid.Column="0"
+                       Text="Barometric Pressure"
+                       TextColor="{StaticResource StandardTextColor}"
+                       Font="Default, 18"
+                       HorizontalOptions="Start"
+                       VerticalOptions="Center"
+                       Margin="10,0,10,0"/>
+                <Label Grid.Row="5"
+                       Grid.Column="1"
+                       Text="{Binding Pressure}"
+                       TextColor="{StaticResource StandardTextColor}"
+                       Font="Default, 18"
+                       HorizontalOptions="End"
+                       VerticalOptions="Center"
+                       Margin="10,0,10,0"/>
+                <Label Grid.Row="6"
+                       Grid.Column="0"
+                       Text="Today's Maximum AQI"
+                       TextColor="{StaticResource StandardTextColor}"
+                       Font="Default, 18"
+                       HorizontalOptions="Start"
+                       VerticalOptions="Center"
+                       Margin="10,0,10,0"/>
+                <Label Grid.Row="6"
+                       Grid.Column="1"
+                       Text="{Binding MaxAQIAndContributor}"
+                       TextColor="{StaticResource StandardTextColor}"
+                       Font="Default, 18"
+                       HorizontalOptions="End"
+                       VerticalOptions="Center"
+                       Margin="10,0,10,0"/>
+            </Grid>
+            <chart:SfChart Grid.Row="3"
+                           Grid.Column="0"
+                           BackgroundColor="Black"
+                           Margin="10,0,10,10">
+                <chart:SfChart.Title>
+                    <chart:ChartTitle Text="miAQI History"
+                                      TextColor="White"
+                                      Font="Default, 10"/>
+                </chart:SfChart.Title>
+
+                <chart:SfChart.PrimaryAxis>
+                    <chart:DateTimeAxis Interval="4"
+                                        IntervalType="Hours"
+                                        Minimum="{Binding TodayDateTime}"
+                                        Maximum="{Binding TomorrowDateTime}">
+                        <chart:DateTimeAxis.LabelStyle>
+                            <chart:ChartAxisLabelStyle TextColor="White"
+                                                       Font="Default, 10">
+                                <chart:ChartAxisLabelStyle.LabelFormat>
+                                    <OnPlatform x:TypeArguments="x:String">
+                                        <On Platform="iOS" Value="ha"/>
+                                        <On Platform="Android" Value="ha"/>
+                                        <On Platform="UWP" Value="htt"/>
+                                    </OnPlatform>
+                                </chart:ChartAxisLabelStyle.LabelFormat>
+                            </chart:ChartAxisLabelStyle>
+                        </chart:DateTimeAxis.LabelStyle>
+                        
+                    </chart:DateTimeAxis>
+                </chart:SfChart.PrimaryAxis>
+
+                <chart:SfChart.SecondaryAxis>
+                    <chart:NumericalAxis Minimum="0"
+                                         RangePadding="Additional">
+                        <chart:NumericalAxis.LabelStyle>
+                            <chart:ChartAxisLabelStyle TextColor="White"
+                                                       Font="Default,10"/>
+                        </chart:NumericalAxis.LabelStyle>
+                    </chart:NumericalAxis>
+                </chart:SfChart.SecondaryAxis>
+
+                <chart:SfChart.Series>
+                    <chart:LineSeries ItemsSource="{Binding HourMaxAQIData}"
+                                      StrokeWidth="4"
+                                      Color="White"/>
+                    <chart:ScatterSeries ScatterHeight="8"
+	                                     ScatterWidth="8"
+	                                     ItemsSource ="{Binding HourMaxAQIData}"
+                                         Color="White"
+                                         Opacity="1"/>
+                </chart:SfChart.Series>
+            </chart:SfChart>
+        </Grid>
+    </ContentPage.Content>
+</ContentPage>

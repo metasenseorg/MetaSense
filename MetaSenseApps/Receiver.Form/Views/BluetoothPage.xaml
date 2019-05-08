@@ -1,0 +1,81 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:prism="clr-namespace:Prism.Mvvm;assembly=Prism.Forms"
+             prism:ViewModelLocator.AutowireViewModel="True"
+             xmlns:b="clr-namespace:Prism.Behaviors;assembly=Prism.Forms"
+             xmlns:receiver="clr-namespace:Receiver;assembly=Receiver"
+             x:Class="Receiver.Views.BluetoothPage"
+             Title="Select Bluetooth Node">
+    <!--<ContentPage.BindingContext>
+        <viewModels:BluetoothViewModel/>
+    </ContentPage.BindingContext>-->
+    <ContentPage.Padding>
+        <OnPlatform x:TypeArguments="Thickness">
+            <OnPlatform.iOS>
+                10, 30, 10, 10
+            </OnPlatform.iOS>
+            <OnPlatform.Android>
+                10, 10, 10, 10
+            </OnPlatform.Android>
+            <OnPlatform.WinPhone>
+                10, 10, 10, 10
+            </OnPlatform.WinPhone>
+        </OnPlatform>
+    </ContentPage.Padding>
+    <StackLayout>
+        <StackLayout Orientation="Horizontal" >
+            <StackLayout.IsVisible>
+                <OnPlatform x:TypeArguments="x:Boolean" Android="False" iOS="False" WinPhone="True"/>
+            </StackLayout.IsVisible>
+            <Button HorizontalOptions="EndAndExpand" Text="Refresh" Command="{Binding RefreshCommand}"/>
+        </StackLayout>
+        <!--local:AttachCommandsToListView.ItemSelected="{Binding ItemTapped}"-->
+        <ListView x:Name="BleView" 
+                  ItemsSource="{Binding  SensorsList}" 
+                  VerticalOptions="StartAndExpand" 
+                  SelectedItem="{Binding NodeViewModel}"
+                  RefreshCommand="{Binding RefreshCommand}"
+                  IsPullToRefreshEnabled="True">
+            <!--receiver:AttachCommandsToListView.ItemTapped="{Binding ItemTapped}"
+                  receiver:AttachCommandsToListView.Refreshing="{Binding Refreshing}"-->
+            <ListView.Behaviors>
+                <b:EventToCommandBehavior EventName="ItemTapped" Command="{Binding ItemTapped}" />
+                <b:EventToCommandBehavior EventName="Refreshing" Command="{Binding Refreshing}" />
+            </ListView.Behaviors>
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <ViewCell>
+                        <Grid HeightRequest="60">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="50"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="45"/>
+                            </Grid.ColumnDefinitions>
+                            <Image Aspect="AspectFit" 
+                                Source="{Binding PairedStatusImage}"
+                                Grid.Column="0"
+                                HorizontalOptions="Center"
+                                VerticalOptions="Center"
+                                HeightRequest ="45" WidthRequest="45"
+                            />
+                            <StackLayout Grid.Column="1" VerticalOptions="Center">
+                                <Label Text="{Binding Name}" />
+                                <Label Text="{Binding MacAddress}" FontAttributes="Italic" FontSize="10" />
+                            </StackLayout>
+                            <!--<Label Text="{Binding Paired, StringFormat='Paired {0}'}" />-->
+                            <!--HorizontalOptions="EndAndExpand" />-->
+                            <!--<Label Text="{Binding SignalStrength,  StringFormat='{0:0.00}'}" Grid.Column="2"  HorizontalOptions="Center" VerticalOptions="Center" />-->
+                            <Image Aspect="AspectFit"
+                                   Grid.Column="2"
+                                   Source="{Binding SingalStrengthStatusImage}"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center"
+                                   HeightRequest="25" WidthRequest="25" />
+                        </Grid>
+                    </ViewCell>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+    </StackLayout>
+</ContentPage>

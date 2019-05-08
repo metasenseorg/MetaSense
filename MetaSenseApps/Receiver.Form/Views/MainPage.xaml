@@ -1,0 +1,90 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<MasterDetailPage 
+    xmlns="http://xamarin.com/schemas/2014/forms"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:prism="clr-namespace:Prism.Mvvm;assembly=Prism.Forms"
+    prism:ViewModelLocator.AutowireViewModel="True"
+    x:Class="Receiver.Views.MainPage">
+
+    <!-- xmlns:receiver="clr-namespace:Receiver;assembly=Receiver"
+    xmlns:viewModels="clr-namespace:ViewModels;assembly=ViewModels"
+    MasterBehavior="Default"-->
+    <!--<MasterDetailPage.BindingContext>
+        <viewModels:MainViewModel/>
+    </MasterDetailPage.BindingContext>-->
+
+    <MasterDetailPage.Master>
+        <NavigationPage Title="Required Foo" Icon="icon.png">
+            <x:Arguments>
+                <ContentPage Title="Menu" Icon="icon.png">
+                    <!--<ContentPage.Padding>
+                        <OnPlatform x:TypeArguments="Thickness">
+                            <OnPlatform.iOS>
+                                10, 30, 10, 10
+                            </OnPlatform.iOS>
+                            <OnPlatform.Android>
+                                10, 10, 10, 10
+                            </OnPlatform.Android>
+                            <OnPlatform.WinPhone>
+                                10, 10, 10, 10
+                            </OnPlatform.WinPhone>
+                        </OnPlatform>
+                    </ContentPage.Padding>-->
+                    <StackLayout Padding="40">
+                        <!--<StackLayout Orientation="Vertical" 
+                        Spacing="0"
+                        HorizontalOptions="FillAndExpand"
+                        VerticalOptions="Start">-->
+                        <!--DM: change all command parameters so that AQIPage acts as 'home'-->
+                        <!--DM: add new UI pages-->
+                        <Button
+                            Text="AQI Info"
+                            Command="{Binding NavigateCommand}"
+                            CommandParameter="Navigation/AQIPage" />
+                        <Button
+                            Text="Pollutant Details"
+                            Command="{Binding NavigateCommand}"
+                            CommandParameter="Navigation/AQIPage/PollutantDetailsPage" />
+                        <Button
+                            Text="Overview"
+                            Command="{Binding NavigateCommand}"
+                            CommandParameter="Navigation/AQIPage/OverviewPage"/>
+                        <!--DM: end-->
+                        <Button 
+                            Text="Data View" 
+                            Command="{Binding NavigateCommand}"
+                            CommandParameter="Navigation/AQIPage/DataPage" />
+                        <Button 
+                            Text="Graph View" 
+                            Command="{Binding NavigateCommand}"
+                            CommandParameter="Navigation/AQIPage/GraphPage" />
+                        <Button 
+                            Text="Export Readings" 
+                            Command="{Binding ExportDbButton}" />
+                        <Button 
+                            Text="Clear All Readings" 
+                            Command="{Binding ClearDbButton}" />
+                        <Button 
+                            Text="Location Info" 
+                            Command="{Binding NavigateCommand}"
+                            CommandParameter="Navigation/AQIPage/LocationPage" />
+                        <Button 
+                            Text="Settings" 
+                            VerticalOptions="EndAndExpand"
+                            Command="{Binding NavigateCommand}"
+                            CommandParameter="Navigation/AQIPage/SettingsPage" />
+                    </StackLayout>
+                </ContentPage>
+            </x:Arguments>
+        </NavigationPage>
+    </MasterDetailPage.Master>
+
+    <!--<MasterDetailPage.Detail>
+        <NavigationPage>
+            <x:Arguments>
+                <receiver:OverviewPage />
+            </x:Arguments>
+        </NavigationPage>
+    </MasterDetailPage.Detail>-->
+
+</MasterDetailPage>

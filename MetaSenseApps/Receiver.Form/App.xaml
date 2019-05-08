@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<prism:PrismApplication 
+    xmlns="http://xamarin.com/schemas/2014/forms"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:prism="clr-namespace:Prism.DryIoc;assembly=Prism.DryIoc.Forms"
+    x:Class="Receiver.App">
+    <prism:PrismApplication.Resources>
+        <!-- Application resource dictionary -->
+      <!--DM: added text colors -->
+      <ResourceDictionary>
+        <Color x:Key="HeaderTextColor">#ffffff</Color>
+        <Color x:Key="StandardTextColor">#b7b7b7</Color>
+        <Color x:Key="BackgroundColor">#000000</Color>
+        <Color x:Key="MetaSenseTheme">#25e85b</Color>
+        <Color x:Key="GoodAQIColor">#00e400</Color>
+        <!--true EPA yellow color-->
+        <!--<Color x:Key="ModerateAQIColor">#ffff00</Color>-->
+        <Color x:Key="ModerateAQIColor">#f0f400</Color>
+        <Color x:Key="SensitiveUnhealthyAQIColor">#ff7e00</Color>
+        <Color x:Key="UnhealthyAQIColor">#ff0000</Color>
+        <Color x:Key="VeryUnhealthyAQIColor">#8f3f97</Color>
+        <Color x:Key="TableRowColor">#e0e0e0</Color>
+        <Color x:Key="AltTableRowColor">#f2f2f2</Color>
+      </ResourceDictionary>
+      <!--DM: end of colors-->
+    </prism:PrismApplication.Resources>
+</prism:PrismApplication>

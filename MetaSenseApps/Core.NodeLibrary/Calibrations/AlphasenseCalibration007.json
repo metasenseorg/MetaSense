@@ -1,0 +1,41 @@
+{
+  "NO2": {
+    "WE_E0_mV": 300,
+    "WE_S0_mV": 6,
+    "WE_0_mV": 306,
+    "AE_E0_mV": 289,
+    "AE_S0_mV": 1,
+    "AE_0_mV": 290,
+    "Sensitivity_nA_ppb": -0.392,
+    "Sensitivity_NO2_nA_ppb": -0.392,
+    "PCB_gain_mV_nA": -0.73,
+    "Sensitivity_mV_ppb": 0.286,
+    "Sensitivity_NO2_mV_ppb": 0.286
+  },
+  "CO": {
+    "WE_E0_mV": 411,
+    "WE_S0_mV": 7,
+    "WE_0_mV": 418,
+    "AE_E0_mV": 416,
+    "AE_S0_mV": 2,
+    "AE_0_mV": 418,
+    "Sensitivity_nA_ppb": -0.388,
+    "Sensitivity_NO2_nA_ppb": -0.377,
+    "PCB_gain_mV_nA": -0.73,
+    "Sensitivity_mV_ppb": 0.283,
+    "Sensitivity_NO2_mV_ppb": 0.275
+  },
+  "O3": {
+    "WE_E0_mV": 270,
+    "WE_S0_mV": 55,
+    "WE_0_mV": 325,
+    "AE_E0_mV": 267,
+    "AE_S0_mV": 3,
+    "AE_0_mV": 270,
+    "Sensitivity_nA_ppb": 0.274,
+    "Sensitivity_NO2_nA_ppb": 0,
+    "PCB_gain_mV_nA": 0.80,
+    "Sensitivity_mV_ppb": 0.219,
+    "Sensitivity_NO2_mV_ppb": 0
+  }
+}
