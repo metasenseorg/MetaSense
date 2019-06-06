@@ -1,2 +1,2 @@
 # MetaSense
-MetaSense Project Software Repository
+MetaSense Project Repository of Data, Software, and Hardware
