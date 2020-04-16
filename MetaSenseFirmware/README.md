@@ -1,4 +1,4 @@
-# METASENSE Ari Quality Node Firmware
+# METASENSE Air Quality Node Firmware
 The firmware works with particle photon (http://particle.io) and the custom hardware designed by UCSD MetaSense team (http://metasense.ucsd.edu).
 This version of the firmware has been modified to compute part of the herarhcical NN and communicate with the rest of the smarthome.
 

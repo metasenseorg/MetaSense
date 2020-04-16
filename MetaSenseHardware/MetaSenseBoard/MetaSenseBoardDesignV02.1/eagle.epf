@@ -1,0 +1,19 @@
+[Eagle]
+Version="07 05 00"
+Platform="Mac OS X"
+Serial="740C0BD05C-LSR-WLM-1CL"
+Globals="Globals"
+Desktop="Desktop"
+
+[Globals]
+AutoSaveProject=1
+UsedLibrary="/Applications/EAGLE-7.5.0/lbr/HM-11.lbr"
+UsedLibrary="/Applications/EAGLE-7.5.0/lbr/Particle.lbr"
+UsedLibrary="/Applications/EAGLE-7.5.0/lbr/metasense.lbr"
+UsedLibrary="/Applications/EAGLE-7.5.0/lbr/pinhead.lbr"
+UsedLibrary="/Users/chrine/external_lbrs/adafruit.lbr"
+UsedLibrary="/Users/chrine/external_lbrs/SparkFun-Eagle-Libraries-master/SparkFun-Aesthetics.lbr"
+UsedLibrary="/Users/chrine/external_lbrs/spark-photon-9a2d130/libraries/Spark.lbr"
+
+[Desktop]
+Screen="1440 900"
