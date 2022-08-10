@@ -29,7 +29,7 @@ MarkupSafe==1.0
 matplotlib==2.2.2
 -e git+https://github.com/sharadmv/metasense-transfer.git@9cb1c4779584797d8af16bf3b35d9bbef8fe56d5#egg=metasense
 mistune==0.8.3
-nbconvert==5.3.1
+nbconvert==6.3.0
 nbformat==4.4.0
 notebook==5.4.1
 numpy==1.14.2
